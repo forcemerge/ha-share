@@ -6,6 +6,41 @@ severe_weather_ai_correlation_snapshot:
   alias: Severe Weather - AI Correlation Snapshot
   mode: single
   sequence:
+    - variables:
+        station_pressure_inhg: >-
+          {% set bad = ['unknown', 'unavailable', 'none', 'None', ''] %}
+          {% set p = states('sensor.local_weather_pressure_sea_level') %}
+          {% if p in bad %}
+            {% set p = states('sensor.local_weather_station_pressure') %}
+          {% endif %}
+          {% if p in bad %}
+            {% set p = states('sensor.local_weather_air_pressure') %}
+          {% endif %}
+          {% if p in bad %}
+            {% set p = states('sensor.local_weather_pressure') %}
+          {% endif %}
+          {{ p }}
+        lightning_avg_distance_mi: >-
+          {% set d = states('sensor.local_lightning_average_distance') %}
+          {% if d in ['unknown', 'unavailable', 'none', 'None', ''] %}
+            {% set d = states('sensor.local_lightning_last_distance') %}
+          {% endif %}
+          {{ d }}
+        solar_radiation_w_m2: >-
+          {% set s = states('sensor.local_weather_solar_radiation') %}
+          {% if s in ['unknown', 'unavailable', 'none', 'None', ''] %}
+            {% set s = states('sensor.local_weather_irradiance') %}
+          {% endif %}
+          {{ s }}
+        brightness_lux: >-
+          {% set b = states('sensor.local_weather_brightness') %}
+          {% if b in ['unknown', 'unavailable', 'none', 'None', ''] %}
+            {% set b = states('sensor.local_weather_illuminance') %}
+          {% endif %}
+          {% if b in ['unknown', 'unavailable', 'none', 'None', ''] %}
+            {% set b = states('sensor.local_weather_lux') %}
+          {% endif %}
+          {{ b }}
     - action: ai_task.generate_data
       response_variable: storm_ai
       data:
@@ -15,19 +50,45 @@ severe_weather_ai_correlation_snapshot:
           You are a severe-weather ops analyst.
 
           Synthesize these live signals into a short, practical situation report.
-          Keep it concise, no fluff, no emojis.
+          Keep it concise, no fluff, no emojis. Ignore any unknown/unavailable values.
 
           Signals:
           - active_alerts={{ states('sensor.storm_active_alert_count') }}
           - primary_event={{ states('sensor.storm_primary_alert_event') }}
           - primary_headline={{ states('sensor.storm_primary_alert_headline') }}
+          - action_recommended={{ states('binary_sensor.storm_action_recommended') }}
+          - action_reason={{ state_attr('binary_sensor.storm_action_recommended', 'reason') }}
           - tornado_escalation={{ states('sensor.storm_tornado_escalation_level') }}/4
-          - lightning_index={{ states('sensor.storm_lightning_watch_index') }}
-          - instability_index={{ states('sensor.storm_environmental_instability_index') }}
+          - risk_level={{ states('sensor.storm_risk_level') }}
           - cockpit_score={{ states('sensor.storm_risk_cockpit_score') }}
+          - instability_index={{ states('sensor.storm_environmental_instability_index') }}
+          - lightning_index={{ states('sensor.storm_lightning_watch_index') }}
+          - lightning_active={{ states('binary_sensor.storm_lightning_active') }}
+          - lightning_count_1h={{ states('sensor.local_lightning_count_last_1_hr') }}
+          - lightning_count_3h={{ states('sensor.local_lightning_count_last_3_hr') }}
+          - lightning_avg_distance_mi={{ lightning_avg_distance_mi }}
+          - blitz_distance_mi={{ states('sensor.local_lightning_distance') }}
+          - blitz_counter={{ states('sensor.local_lightning_counter') }}
+          - blitz_azimuth_deg={{ states('sensor.local_lightning_azimuth') }}
+          - nws_gps_last_updated={{ states('sensor.nws_alerts_last_updated') }}
+          - nws_zone_last_updated={{ states('sensor.nws_alerts_zone_last_updated') }}
+          - station_pressure_inhg={{ station_pressure_inhg }}
+          - sea_level_pressure_inhg={{ states('sensor.local_weather_pressure_sea_level') }}
+          - temperature_f={{ states('sensor.local_weather_temperature') }}
+          - feels_like_f={{ states('sensor.local_weather_feels_like') }}
+          - dew_point_f={{ states('sensor.local_weather_dew_point') }}
+          - wet_bulb_temp_f={{ states('sensor.local_weather_wet_bulb_temperature') }}
+          - vapor_pressure={{ states('sensor.local_weather_vapor_pressure') }}
+          - air_density={{ states('sensor.local_weather_air_density') }}
+          - wind_direction_deg={{ states('sensor.local_weather_wind_direction') }}
+          - wind_speed_mph={{ states('sensor.local_weather_wind_speed') }}
           - wind_gust_mph={{ states('sensor.local_weather_wind_gust') }}
-          - pressure_inhg={{ states('sensor.local_weather_pressure_sea_level') }}
+          - wind_lull_mph={{ states('sensor.local_weather_wind_lull') }}
           - rain_last_hour_mm={{ states('sensor.local_weather_rain_last_hour') }}
+          - precip_intensity_in_hr={{ states('sensor.local_weather_precipitation_intensity') }}
+          - uv_index={{ states('sensor.local_weather_uv_index') }}
+          - solar_radiation_w_m2={{ solar_radiation_w_m2 }}
+          - brightness_lux={{ brightness_lux }}
 
         structure:
           summary:
@@ -46,16 +107,37 @@ severe_weather_ai_correlation_snapshot:
             required: true
             selector:
               text:
-    - action: persistent_notification.create
+    - variables:
+        ai_summary: >-
+          {{ (storm_ai.data.summary if storm_ai is defined and storm_ai.data is defined else 'No AI summary generated.') | string }}
+        ai_confidence: >-
+          {{ (storm_ai.data.confidence if storm_ai is defined and storm_ai.data is defined else 'n/a') | string }}
+        ai_watch_window: >-
+          {{ (storm_ai.data.watch_window if storm_ai is defined and storm_ai.data is defined else 'n/a') | string }}
+        ai_recommended_action: >-
+          {{ (storm_ai.data.recommended_action if storm_ai is defined and storm_ai.data is defined else 'n/a') | string }}
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.storm_ai_snapshot_summary
       data:
-        title: Severe Weather AI Snapshot
-        message: >-
-          {{
-            (storm_ai.data.summary if storm_ai is defined and storm_ai.data is defined else 'No AI summary generated.')
-            ~ '\n\nConfidence: '
-            ~ (storm_ai.data.confidence if storm_ai is defined and storm_ai.data is defined else 'n/a')
-            ~ '\nWatch Window: '
-            ~ (storm_ai.data.watch_window if storm_ai is defined and storm_ai.data is defined else 'n/a')
-            ~ '\nRecommended Action: '
-            ~ (storm_ai.data.recommended_action if storm_ai is defined and storm_ai.data is defined else 'n/a')
-          }}
+        value: '{{ ai_summary[0:255] }}'
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.storm_ai_snapshot_confidence
+      data:
+        value: '{{ ai_confidence[0:255] }}'
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.storm_ai_snapshot_watch_window
+      data:
+        value: '{{ ai_watch_window[0:255] }}'
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.storm_ai_snapshot_recommended_action
+      data:
+        value: '{{ ai_recommended_action[0:255] }}'
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.storm_ai_snapshot_last_updated
+      data:
+        datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'

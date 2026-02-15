@@ -132,6 +132,7 @@ views:
 
       - type: custom:mushroom-template-card
         primary: AI Correlation Snapshot
+        secondary: Tap to refresh now
         icon: mdi:brain
         icon_color: blue
         fill_container: true
@@ -191,7 +192,7 @@ views:
         distance_entity: sensor.local_lightning_distance
         counter_entity: sensor.local_lightning_counter
         azimuth_entity: sensor.local_lightning_azimuth
-        lightning_detection_radius: 100
+        lightning_detection_radius: 40
         period: 1h
         show_compass: true
         show_radar: true
@@ -248,6 +249,39 @@ views:
             type: area
             color: '#22d3ee'
             yaxis_id: rain
+
+      - type: markdown
+        title: AI Correlation Snapshot
+        content: >-
+          {% set last = states('input_datetime.storm_ai_snapshot_last_updated') %}
+          {% if last in ['unknown', 'unavailable', 'none', ''] %}
+          **Snapshot has not been run yet.**
+
+          Tap **AI Correlation Snapshot** above to generate one now.
+
+          **Auto Refresh:** {{ states('input_number.storm_ai_snapshot_interval_minutes') | int(60) }} min
+          {% else %}
+          **Summary**
+
+          {{ states('input_text.storm_ai_snapshot_summary') }}
+
+          **Confidence:** {{ states('input_text.storm_ai_snapshot_confidence') }}
+
+          **Watch Window:** {{ states('input_text.storm_ai_snapshot_watch_window') }}
+
+          **Recommended Action:** {{ states('input_text.storm_ai_snapshot_recommended_action') }}
+
+          **Last Updated:** {{ last }}
+
+          **Auto Refresh:** {{ states('input_number.storm_ai_snapshot_interval_minutes') | int(60) }} min
+          {% endif %}
+        entity_id:
+          - input_text.storm_ai_snapshot_summary
+          - input_text.storm_ai_snapshot_confidence
+          - input_text.storm_ai_snapshot_watch_window
+          - input_text.storm_ai_snapshot_recommended_action
+          - input_datetime.storm_ai_snapshot_last_updated
+          - input_number.storm_ai_snapshot_interval_minutes
 
       - type: entities
         title: Diagnostic Signals
