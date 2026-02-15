@@ -1,0 +1,61 @@
+# Severe weather scripts (share edition)
+#
+# Add this script to scripts.yaml (or merge under your scripts include) so the
+# dashboard action card can trigger an AI correlation snapshot.
+severe_weather_ai_correlation_snapshot:
+  alias: Severe Weather - AI Correlation Snapshot
+  mode: single
+  sequence:
+    - action: ai_task.generate_data
+      response_variable: storm_ai
+      data:
+        entity_id: ai_task.local_ai_task
+        task_name: severe_weather_correlation_snapshot
+        instructions: >-
+          You are a severe-weather ops analyst.
+
+          Synthesize these live signals into a short, practical situation report.
+          Keep it concise, no fluff, no emojis.
+
+          Signals:
+          - active_alerts={{ states('sensor.storm_active_alert_count') }}
+          - primary_event={{ states('sensor.storm_primary_alert_event') }}
+          - primary_headline={{ states('sensor.storm_primary_alert_headline') }}
+          - tornado_escalation={{ states('sensor.storm_tornado_escalation_level') }}/4
+          - lightning_index={{ states('sensor.storm_lightning_watch_index') }}
+          - instability_index={{ states('sensor.storm_environmental_instability_index') }}
+          - cockpit_score={{ states('sensor.storm_risk_cockpit_score') }}
+          - wind_gust_mph={{ states('sensor.local_weather_wind_gust') }}
+          - pressure_inhg={{ states('sensor.local_weather_pressure_sea_level') }}
+          - rain_last_hour_mm={{ states('sensor.local_weather_rain_last_hour') }}
+
+        structure:
+          summary:
+            required: true
+            selector:
+              text:
+          confidence:
+            required: true
+            selector:
+              text:
+          watch_window:
+            required: true
+            selector:
+              text:
+          recommended_action:
+            required: true
+            selector:
+              text:
+    - action: persistent_notification.create
+      data:
+        title: Severe Weather AI Snapshot
+        message: >-
+          {{
+            (storm_ai.data.summary if storm_ai is defined and storm_ai.data is defined else 'No AI summary generated.')
+            ~ '\n\nConfidence: '
+            ~ (storm_ai.data.confidence if storm_ai is defined and storm_ai.data is defined else 'n/a')
+            ~ '\nWatch Window: '
+            ~ (storm_ai.data.watch_window if storm_ai is defined and storm_ai.data is defined else 'n/a')
+            ~ '\nRecommended Action: '
+            ~ (storm_ai.data.recommended_action if storm_ai is defined and storm_ai.data is defined else 'n/a')
+          }}

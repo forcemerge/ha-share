@@ -1,0 +1,212 @@
+# Network dashboard helper sensors (share edition)
+#
+# Replace source entities below with entities available in your environment.
+- sensor:
+    - name: Network Uplink Throughput
+      unique_id: network_uplink_throughput
+      device_class: data_rate
+      state_class: measurement
+      unit_of_measurement: "MB/s"
+      state: >-
+        {% set candidates = [
+          'sensor.gateway_tx_primary',
+          'sensor.gateway_tx',
+          'sensor.gateway_tx_2',
+          'sensor.gateway_tx_3',
+          'sensor.gateway_tx_4',
+          'sensor.gateway_tx_5',
+          'sensor.gateway_tx_6'
+        ] %}
+        {% set ns = namespace(first=none, nonzero=none) %}
+        {% for eid in candidates %}
+          {% set raw = states(eid) %}
+          {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+            {% set val = raw | float(0) %}
+            {% if ns.first is none %}
+              {% set ns.first = val %}
+            {% endif %}
+            {% if ns.nonzero is none and val > 0 %}
+              {% set ns.nonzero = val %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ (
+          ns.nonzero if ns.nonzero is not none else
+          (ns.first if ns.first is not none else 0)
+        ) | round(6) }}
+      attributes:
+        source_entity: >-
+          {% set candidates = [
+            'sensor.gateway_tx_primary',
+            'sensor.gateway_tx',
+            'sensor.gateway_tx_2',
+            'sensor.gateway_tx_3',
+            'sensor.gateway_tx_4',
+            'sensor.gateway_tx_5',
+            'sensor.gateway_tx_6'
+          ] %}
+          {% set ns = namespace(first='none', nonzero='none') %}
+          {% for eid in candidates %}
+            {% set raw = states(eid) %}
+            {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+              {% set val = raw | float(0) %}
+              {% if ns.first == 'none' %}
+                {% set ns.first = eid %}
+              {% endif %}
+              {% if ns.nonzero == 'none' and val > 0 %}
+                {% set ns.nonzero = eid %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.nonzero if ns.nonzero != 'none' else ns.first }}
+
+    - name: Network Downlink Throughput
+      unique_id: network_downlink_throughput
+      device_class: data_rate
+      state_class: measurement
+      unit_of_measurement: "MB/s"
+      state: >-
+        {% set candidates = [
+          'sensor.gateway_rx_primary',
+          'sensor.gateway_rx',
+          'sensor.gateway_rx_2',
+          'sensor.gateway_rx_3',
+          'sensor.gateway_rx_4',
+          'sensor.gateway_rx_5',
+          'sensor.gateway_rx_6'
+        ] %}
+        {% set ns = namespace(first=none, nonzero=none) %}
+        {% for eid in candidates %}
+          {% set raw = states(eid) %}
+          {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+            {% set val = raw | float(0) %}
+            {% if ns.first is none %}
+              {% set ns.first = val %}
+            {% endif %}
+            {% if ns.nonzero is none and val > 0 %}
+              {% set ns.nonzero = val %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ (
+          ns.nonzero if ns.nonzero is not none else
+          (ns.first if ns.first is not none else 0)
+        ) | round(6) }}
+      attributes:
+        source_entity: >-
+          {% set candidates = [
+            'sensor.gateway_rx_primary',
+            'sensor.gateway_rx',
+            'sensor.gateway_rx_2',
+            'sensor.gateway_rx_3',
+            'sensor.gateway_rx_4',
+            'sensor.gateway_rx_5',
+            'sensor.gateway_rx_6'
+          ] %}
+          {% set ns = namespace(first='none', nonzero='none') %}
+          {% for eid in candidates %}
+            {% set raw = states(eid) %}
+            {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+              {% set val = raw | float(0) %}
+              {% if ns.first == 'none' %}
+                {% set ns.first = eid %}
+              {% endif %}
+              {% if ns.nonzero == 'none' and val > 0 %}
+                {% set ns.nonzero = eid %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.nonzero if ns.nonzero != 'none' else ns.first }}
+
+    - name: Network Uplink Throughput Mbps
+      unique_id: network_uplink_throughput_mbps
+      device_class: data_rate
+      state_class: measurement
+      unit_of_measurement: "Mb/s"
+      state: "{{ (states('sensor.network_uplink_throughput') | float(0) * 8) | round(3) }}"
+
+    - name: Network Downlink Throughput Mbps
+      unique_id: network_downlink_throughput_mbps
+      device_class: data_rate
+      state_class: measurement
+      unit_of_measurement: "Mb/s"
+      state: "{{ (states('sensor.network_downlink_throughput') | float(0) * 8) | round(3) }}"
+
+    - name: Network Total Throughput Mbps
+      unique_id: network_total_throughput_mbps
+      device_class: data_rate
+      state_class: measurement
+      unit_of_measurement: "Mb/s"
+      state: >-
+        {{ (
+          states('sensor.network_uplink_throughput_mbps') | float(0)
+          + states('sensor.network_downlink_throughput_mbps') | float(0)
+        ) | round(3) }}
+
+    - name: Network Active Clients Home
+      unique_id: network_active_clients_home
+      icon: mdi:account-network
+      state_class: measurement
+      unit_of_measurement: clients
+      state: >-
+        {{
+          states.device_tracker
+          | selectattr('entity_id', 'match', '^device_tracker\\.network_')
+          | selectattr('state', 'eq', 'home')
+          | list
+          | count
+        }}
+
+    - name: Network Core Devices Offline
+      unique_id: network_core_devices_offline
+      icon: mdi:alert-octagon-outline
+      state_class: measurement
+      unit_of_measurement: devices
+      state: >-
+        {% set entities = [
+          'sensor.gateway_state',
+          'sensor.core_switch_state',
+          'sensor.ap_primary_state',
+          'sensor.ap_upper_state',
+          'sensor.ap_lower_state'
+        ] %}
+        {% set bad = ['offline', 'disconnected', 'down', 'unavailable', 'unknown', 'none', ''] %}
+        {% set ns = namespace(count=0) %}
+        {% for eid in entities %}
+          {% if states(eid) | lower in bad %}
+            {% set ns.count = ns.count + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.count }}
+
+    - name: Network Pending Updates
+      unique_id: network_pending_updates
+      icon: mdi:update
+      state_class: measurement
+      unit_of_measurement: updates
+      state: >-
+        {% set entities = [
+          'update.gateway_firmware',
+          'update.core_switch_firmware',
+          'update.ap_primary_firmware',
+          'update.ap_upper_firmware',
+          'update.ap_lower_firmware'
+        ] %}
+        {% set ns = namespace(count=0) %}
+        {% for eid in entities %}
+          {% if states(eid) | lower == 'on' %}
+            {% set ns.count = ns.count + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.count }}
+
+    - name: Network Health Score
+      unique_id: network_health_score
+      icon: mdi:heart-pulse
+      state_class: measurement
+      unit_of_measurement: "%"
+      state: >-
+        {% set offline = states('sensor.network_core_devices_offline') | int(0) %}
+        {% set updates = states('sensor.network_pending_updates') | int(0) %}
+        {% set score = 100 - (offline * 25) - (updates * 5) %}
+        {{ [0, score] | max }}

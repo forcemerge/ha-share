@@ -1,0 +1,586 @@
+# Sports Tracker (Share Edition)
+#
+# Public share package of the Sports Tracker dashboard.
+# This version preserves layout/logic while sanitizing environment-specific identifiers.
+#
+# Features: team tracker cards for multiple teams, with conditional sections
+# that expand only when relevant.
+#
+# Requirements: TeamTracker integration and the teamtracker-card.
+title: "Sports"
+views:
+  -
+    title: "My Teams"
+    path: "my-teams"
+    icon: "mdi:trophy"
+    cards:
+      -
+        type: "vertical-stack"
+        cards:
+          -
+            type: "custom:teamtracker-card"
+            entity: "sensor.team_football"
+            outline: true
+            outline_color: "lightgray"
+            show_timeouts: true
+            show_rank: true
+            show_league: false
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_football"
+                state: "PRE"
+            card:
+              type: "entities"
+              title: "Team Football - Pregame"
+              entities:
+                -
+                  entity: "sensor.team_football"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "kickoff_in"
+                  name: "Kickoff"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "date"
+                  name: "Start time"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "tv_network"
+                  name: "TV"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "venue"
+                  name: "Stadium"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "location"
+                  name: "Location"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "odds"
+                  name: "Odds"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "overunder"
+                  name: "Over/Under"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_football"
+                state: "IN"
+            card:
+              type: "entities"
+              title: "Team Football - Live"
+              entities:
+                -
+                  entity: "sensor.team_football"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "team_score"
+                  name: "Team score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "opponent_score"
+                  name: "Opponent score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "quarter"
+                  name: "Quarter"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "clock"
+                  name: "Clock"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "down_distance_text"
+                  name: "Down and distance"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "possession"
+                  name: "Possession"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "last_play"
+                  name: "Last play"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "team_win_probability"
+                  name: "Team win %"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "opponent_win_probability"
+                  name: "Opp win %"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "team_timeouts"
+                  name: "Team timeouts"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "opponent_timeouts"
+                  name: "Opp timeouts"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "last_update"
+                  name: "Refreshed"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_football"
+                state: "POST"
+            card:
+              type: "entities"
+              title: "Team Football - Final"
+              entities:
+                -
+                  entity: "sensor.team_football"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "team_score"
+                  name: "Team score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "opponent_score"
+                  name: "Opp score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "team_winner"
+                  name: "Team won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "opponent_winner"
+                  name: "Opp won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_football"
+                  attribute: "last_update"
+                  name: "Refreshed"
+      -
+        type: "vertical-stack"
+        cards:
+          -
+            type: "custom:teamtracker-card"
+            entity: "sensor.team_basketball"
+            outline: true
+            outline_color: "lightgray"
+            show_timeouts: false
+            show_rank: true
+            show_league: false
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_basketball"
+                state: "PRE"
+            card:
+              type: "entities"
+              title: "Team Basketball - Pregame"
+              entities:
+                -
+                  entity: "sensor.team_basketball"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "kickoff_in"
+                  name: "Tipoff"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "date"
+                  name: "Start time"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "tv_network"
+                  name: "TV"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "venue"
+                  name: "Arena"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "location"
+                  name: "Location"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_basketball"
+                state: "IN"
+            card:
+              type: "entities"
+              title: "Team Basketball - Live"
+              entities:
+                -
+                  entity: "sensor.team_basketball"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "team_score"
+                  name: "Team score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "opponent_score"
+                  name: "Opponent score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "quarter"
+                  name: "Period"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "clock"
+                  name: "Clock"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "last_update"
+                  name: "Refreshed"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_basketball"
+                state: "POST"
+            card:
+              type: "entities"
+              title: "Team Basketball - Final"
+              entities:
+                -
+                  entity: "sensor.team_basketball"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "team_score"
+                  name: "Team score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "opponent_score"
+                  name: "Opp score"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "team_winner"
+                  name: "Team won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "opponent_winner"
+                  name: "Opp won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_basketball"
+                  attribute: "last_update"
+                  name: "Refreshed"
+      -
+        type: "vertical-stack"
+        cards:
+          -
+            type: "custom:teamtracker-card"
+            entity: "sensor.team_hockey"
+            outline: true
+            outline_color: "lightgray"
+            show_timeouts: false
+            show_rank: false
+            show_league: false
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_hockey"
+                state: "PRE"
+            card:
+              type: "entities"
+              title: "Team Hockey - Pregame"
+              entities:
+                -
+                  entity: "sensor.team_hockey"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "kickoff_in"
+                  name: "Puck drop"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "date"
+                  name: "Start time"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "tv_network"
+                  name: "TV"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "venue"
+                  name: "Arena"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "location"
+                  name: "Location"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_hockey"
+                state: "IN"
+            card:
+              type: "entities"
+              title: "Team Hockey - Live"
+              entities:
+                -
+                  entity: "sensor.team_hockey"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "team_score"
+                  name: "Team"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "opponent_score"
+                  name: "Opponent"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "quarter"
+                  name: "Period"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "clock"
+                  name: "Clock"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "last_update"
+                  name: "Refreshed"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_hockey"
+                state: "POST"
+            card:
+              type: "entities"
+              title: "Team Hockey - Final"
+              entities:
+                -
+                  entity: "sensor.team_hockey"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "team_score"
+                  name: "Team"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "opponent_score"
+                  name: "Opponent"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "team_winner"
+                  name: "Team won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "opponent_winner"
+                  name: "Opp won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_hockey"
+                  attribute: "last_update"
+                  name: "Refreshed"
+      -
+        type: "vertical-stack"
+        cards:
+          -
+            type: "custom:teamtracker-card"
+            entity: "sensor.team_baseball"
+            outline: true
+            outline_color: "lightgray"
+            show_timeouts: false
+            show_rank: false
+            show_league: false
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_baseball"
+                state: "PRE"
+            card:
+              type: "entities"
+              title: "Team Baseball - Pregame"
+              entities:
+                -
+                  entity: "sensor.team_baseball"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "kickoff_in"
+                  name: "First pitch"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "date"
+                  name: "Start time"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "tv_network"
+                  name: "TV"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "venue"
+                  name: "Ballpark"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "location"
+                  name: "Location"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_baseball"
+                state: "IN"
+            card:
+              type: "entities"
+              title: "Team Baseball - Live"
+              entities:
+                -
+                  entity: "sensor.team_baseball"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "team_score"
+                  name: "Team"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "opponent_score"
+                  name: "Opponent"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "clock"
+                  name: "Inning"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "outs"
+                  name: "Outs"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "balls"
+                  name: "Balls"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "strikes"
+                  name: "Strikes"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "on_first"
+                  name: "On 1st"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "on_second"
+                  name: "On 2nd"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "on_third"
+                  name: "On 3rd"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "last_update"
+                  name: "Refreshed"
+          -
+            type: "conditional"
+            conditions:
+              -
+                entity: "sensor.team_baseball"
+                state: "POST"
+            card:
+              type: "entities"
+              title: "Team Baseball - Final"
+              entities:
+                -
+                  entity: "sensor.team_baseball"
+                  name: "Game state"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "team_score"
+                  name: "Team"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "opponent_score"
+                  name: "Opponent"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "team_winner"
+                  name: "Team won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "opponent_winner"
+                  name: "Opp won?"
+                -
+                  type: "attribute"
+                  entity: "sensor.team_baseball"
+                  attribute: "last_update"
+                  name: "Refreshed"

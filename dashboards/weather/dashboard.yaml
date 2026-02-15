@@ -1,0 +1,149 @@
+# Weather (Share Edition)
+#
+# Public share package of the Weather dashboard.
+# This version preserves layout/logic while sanitizing environment-specific identifiers.
+#
+# Features: weather UI iframe, live condition tiles, wind rose, and 24h history graphs.
+#
+# Requirements: weather entities, windrose-card, and a configured station URL secret.
+title: "Weather"
+views:
+  -
+    title: "Station UI"
+    path: "station-ui"
+    icon: "mdi:weather-partly-cloudy"
+    panel: true
+    cards:
+      -
+        type: "iframe"
+        url: !secret weather_station_url
+        aspect_ratio: "165%"
+  -
+    title: "Weather Sensors"
+    path: "weather-sensors"
+    icon: "mdi:gauge"
+    cards:
+      -
+        type: "markdown"
+        content: "## Live conditions\n"
+      -
+        type: "grid"
+        columns: 2
+        square: false
+        cards:
+          -
+            type: "tile"
+            entity: "sensor.local_weather_temperature"
+            name: "Temp"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_feels_like"
+            name: "Feels like"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_dew_point"
+            name: "Dew point"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_wind_direction"
+            name: "Wind dir"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_wind_speed"
+            name: "Wind speed"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_wind_gust"
+            name: "Wind gust"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_wind_lull"
+            name: "Wind lull"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_precipitation_intensity"
+            name: "Precip rate"
+          -
+            type: "tile"
+            entity: "sensor.local_weather_uv_index"
+            name: "UV index"
+      -
+        type: "custom:windrose-card"
+        title: "Wind rose (24h)"
+        hours_to_show: 24
+        speed_range_beaufort: true
+        wind_direction_entity:
+          entity: "sensor.local_weather_wind_direction"
+        windspeed_entities:
+          -
+            entity: "sensor.local_weather_wind_speed"
+            name: "Speed"
+          -
+            entity: "sensor.local_weather_wind_gust"
+            name: "Gust"
+          -
+            entity: "sensor.local_weather_wind_lull"
+            name: "Lull"
+        card_mod:
+          style: ".csv-container {\n  overflow: visible !important;\n}\n"
+      -
+        type: "history-graph"
+        title: "Temp + Dew Point (24h)"
+        hours_to_show: 24
+        entities:
+          -
+            entity: "sensor.local_weather_temperature"
+            name: "Temp"
+          -
+            entity: "sensor.local_weather_dew_point"
+            name: "Dew point"
+      -
+        type: "history-graph"
+        title: "Wind (24h)"
+        hours_to_show: 24
+        entities:
+          -
+            entity: "sensor.local_weather_wind_speed"
+            name: "Speed"
+          -
+            entity: "sensor.local_weather_wind_gust"
+            name: "Gust"
+          -
+            entity: "sensor.local_weather_wind_lull"
+            name: "Lull"
+      -
+        type: "history-graph"
+        title: "UV (24h)"
+        hours_to_show: 24
+        entities:
+          -
+            entity: "sensor.local_weather_uv_index"
+            name: "UV index"
+      -
+        type: "history-graph"
+        title: "Precip intensity (24h)"
+        hours_to_show: 24
+        entities:
+          -
+            entity: "sensor.local_weather_precipitation_intensity"
+            name: "in/h"
+      -
+        type: "entities"
+        title: "Station health"
+        show_header_toggle: false
+        entities:
+          -
+            entity: "sensor.local_weather_battery_voltage"
+            name: "Battery voltage"
+          -
+            entity: "sensor.local_weather_air_density"
+            name: "Air density"
+          -
+            entity: "sensor.local_weather_vapor_pressure"
+            name: "Vapor pressure"
+          -
+            entity: "sensor.local_weather_wet_bulb_temperature"
+            name: "Wet bulb temperature"
+      -
+        type: "markdown"
+        content: "## Additional Stats\n\n{% set bad = ['unknown','unavailable','none','None',''] %}\n\n{# Station pressure #}\n{% set station_pressure = states('sensor.local_weather_station_pressure') %}\n{% if station_pressure in bad %}\n  {% set station_pressure = states('sensor.local_weather_air_pressure') %}\n{% endif %}\n{% if station_pressure in bad %}\n  {% set station_pressure = states('sensor.local_weather_pressure') %}\n{% endif %}\n\n{# Wet Bulb Globe Temperature #}\n{% set wbgt = states('sensor.local_weather_wet_bulb_globe_temperature') %}\n{% if wbgt in bad %}\n  {% set wbgt = states('sensor.local_weather_wet_bulb_globe_temperature_alt') %}\n{% endif %}\n\n{# Brightness / Illuminance #}\n{% set brightness = states('sensor.local_weather_brightness') %}\n{% if brightness in bad %}\n  {% set brightness = states('sensor.local_weather_illuminance') %}\n{% endif %}\n{% if brightness in bad %}\n  {% set brightness = states('sensor.local_weather_lux') %}\n{% endif %}\n\n{# Solar Radiation #}\n{% set solar = states('sensor.local_weather_solar_radiation') %}\n{% if solar in bad %}\n  {% set solar = states('sensor.local_weather_irradiance') %}\n{% endif %}\n\n- Station pressure: **{{ station_pressure if station_pressure not in bad else 'not exposed in HA (entity name differs or disabled)' }}**\n- Wet bulb globe temp: **{{ wbgt if wbgt not in bad else 'not exposed in HA (entity name differs or disabled)' }}**\n- Brightness: **{{ brightness if brightness not in bad else 'not exposed in HA (usually illuminance/lux)' }}**\n- Solar radiation: **{{ solar if solar not in bad else 'not exposed in HA (entity name differs or disabled)' }}**\n"

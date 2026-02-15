@@ -113,7 +113,7 @@ views:
               action: none
             show_state: false
           - type: custom:mushroom-entity-card
-            entity: ai_task.openai_ai_task
+            entity: ai_task.local_ai_task
             name: AI Task Heartbeat
             icon: mdi:robot-outline
 

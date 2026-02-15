@@ -1,0 +1,106 @@
+# Lighting (Share Edition)
+#
+# Public share package of the Lighting dashboard.
+# This version preserves layout/logic while sanitizing environment-specific identifiers.
+#
+# Features: quick room/zone lighting controls with brightness and color controls exposed.
+#
+# Requirements: Mushroom cards and the light entities referenced in this view.
+title: "Lighting"
+views:
+  -
+    title: "Lighting"
+    path: "lighting"
+    icon: "mdi:lightbulb-group"
+    cards:
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.front_exterior"
+        name: "Front Exterior"
+        icon: "mdi:coach-lamp"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.rear_exterior"
+        name: "Rear Exterior"
+        icon: "mdi:string-lights"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.kitchen_ceiling"
+        name: "Kitchen Ceiling"
+        icon: "mdi:ceiling-light"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.kitchen_island"
+        name: "Kitchen Island"
+        icon: "mdi:countertop-outline"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.living_room"
+        name: "Living Room"
+        icon: "mdi:sofa-outline"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.primary_bedroom"
+        name: "Primary Bedroom"
+        icon: "mdi:bed-king-outline"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+      -
+        type: "custom:mushroom-light-card"
+        entity: "light.basement"
+        name: "Basement"
+        icon: "mdi:stairs-down"
+        use_light_color: true
+        show_brightness_control: true
+        show_color_temp_control: true
+        show_color_control: true
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"

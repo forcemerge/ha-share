@@ -1,0 +1,159 @@
+# Control (Share Edition)
+#
+# Public share package of the Control dashboard.
+# This version preserves layout/logic while sanitizing environment-specific identifiers.
+#
+# Features: lock control, contact status grid, thermostat controls, and temperature/humidity snapshots.
+#
+# Requirements: Mushroom cards, your lock/climate entities, and the sensors referenced in this view.
+title: "Controls"
+views:
+  -
+    title: "Controls"
+    path: "controls"
+    icon: "mdi:gesture-tap"
+    cards:
+      -
+        type: "custom:mushroom-title-card"
+        title: "Entry"
+      -
+        type: "custom:mushroom-lock-card"
+        entity: "lock.entry_door"
+        name: "Entry Door"
+        tap_action:
+          action: "toggle"
+        hold_action:
+          action: "more-info"
+        double_tap_action:
+          action: "more-info"
+      -
+        type: "grid"
+        columns: 2
+        square: false
+        cards:
+          -
+            type: "custom:mushroom-entity-card"
+            entity: "binary_sensor.garage_door_contact"
+            name: "Garage Door"
+            icon: "mdi:garage"
+            tap_action:
+              action: "more-info"
+            hold_action:
+              action: "none"
+          -
+            type: "custom:mushroom-entity-card"
+            entity: "binary_sensor.entry_door_contact"
+            name: "Entry Door (Contact)"
+            icon: "mdi:door"
+            tap_action:
+              action: "more-info"
+            hold_action:
+              action: "none"
+          -
+            type: "custom:mushroom-entity-card"
+            entity: "binary_sensor.patio_door_contact"
+            name: "Patio Door"
+            icon: "mdi:door-sliding"
+            tap_action:
+              action: "more-info"
+            hold_action:
+              action: "none"
+          -
+            type: "custom:mushroom-entity-card"
+            entity: "binary_sensor.side_entry_contact"
+            name: "Side Entry"
+            icon: "mdi:door"
+            tap_action:
+              action: "more-info"
+            hold_action:
+              action: "none"
+          -
+            type: "custom:mushroom-entity-card"
+            entity: "binary_sensor.basement_entry_contact"
+            name: "Basement Entry"
+            icon: "mdi:door"
+            tap_action:
+              action: "more-info"
+            hold_action:
+              action: "none"
+      -
+        type: "custom:mushroom-title-card"
+        title: "Thermostats"
+      -
+        type: "custom:mushroom-climate-card"
+        entity: "climate.main_living_area"
+        name: "Living Area"
+        show_temperature_control: true
+        collapsible_controls: true
+        tap_action:
+          action: "more-info"
+        hold_action:
+          action: "none"
+      -
+        type: "custom:mushroom-climate-card"
+        entity: "climate.upper_level"
+        name: "Upper Level"
+        show_temperature_control: true
+        collapsible_controls: true
+        tap_action:
+          action: "more-info"
+        hold_action:
+          action: "none"
+      -
+        type: "custom:mushroom-climate-card"
+        entity: "climate.spa_heater"
+        name: "Spa"
+        show_temperature_control: true
+        collapsible_controls: true
+        tap_action:
+          action: "more-info"
+        hold_action:
+          action: "none"
+      -
+        type: "custom:mushroom-title-card"
+        title: "Temperature & Humidity"
+      -
+        type: "grid"
+        columns: 2
+        square: false
+        cards:
+          -
+            type: "custom:mushroom-template-card"
+            primary: !secret control_room_label_1
+            icon: "mdi:baby-face-outline"
+            secondary: "{% set t = states('sensor.local_room_1_temperature') %} {% set h = states('sensor.local_room_1_humidity') %} {% set t_ok = t not in ['unknown','unavailable','none',''] %} {% set h_ok = h not in ['unknown','unavailable','none',''] %} {{ (t|float(0))|round(0) if t_ok else '—' }}°F • {{ (h|int(0)) if h_ok else '—' }}%"
+            tap_action:
+              action: "more-info"
+              entity: "sensor.local_room_1_temperature"
+          -
+            type: "custom:mushroom-template-card"
+            primary: "Garage"
+            icon: "mdi:garage-variant"
+            secondary: "{% set t = states('sensor.local_garage_temperature') %} {% set h = states('sensor.local_garage_humidity') %} {% set t_ok = t not in ['unknown','unavailable','none',''] %} {% set h_ok = h not in ['unknown','unavailable','none',''] %} {{ (t|float(0))|round(0) if t_ok else '—' }}°F • {{ (h|int(0)) if h_ok else '—' }}%"
+            tap_action:
+              action: "more-info"
+              entity: "sensor.local_garage_temperature"
+          -
+            type: "custom:mushroom-template-card"
+            primary: "Living Area"
+            icon: "mdi:home-thermometer"
+            secondary: "{% set t = states('sensor.main_living_area_temperature') %} {% set h = states('sensor.main_living_area_humidity') %} {% set t_ok = t not in ['unknown','unavailable','none',''] %} {% set h_ok = h not in ['unknown','unavailable','none',''] %} {{ (t|float(0))|round(0) if t_ok else '—' }}°F • {{ (h|int(0)) if h_ok else '—' }}%"
+            tap_action:
+              action: "more-info"
+              entity: "climate.main_living_area"
+          -
+            type: "custom:mushroom-template-card"
+            primary: "Upper Level"
+            icon: "mdi:home-thermometer-outline"
+            secondary: "{% set t = states('sensor.upper_level_temperature') %} {% set h = states('sensor.upper_level_humidity') %} {% set t_ok = t not in ['unknown','unavailable','none',''] %} {% set h_ok = h not in ['unknown','unavailable','none',''] %} {{ (t|float(0))|round(0) if t_ok else '—' }}°F • {{ (h|int(0)) if h_ok else '—' }}%"
+            tap_action:
+              action: "more-info"
+              entity: "climate.upper_level"
+          -
+            type: "custom:mushroom-template-card"
+            primary: "Outside"
+            icon: "mdi:weather-partly-cloudy"
+            secondary: "{% set t = states('sensor.local_weather_temperature') %} {% set h = states('sensor.local_weather_humidity') %} {% set t_ok = t not in ['unknown','unavailable','none',''] %} {% set h_ok = h not in ['unknown','unavailable','none',''] %} {{ (t|float(0))|round(0) if t_ok else '—' }}°F • {{ (h|float(0))|round(0) if h_ok else '—' }}%"
+            tap_action:
+              action: "more-info"
+              entity: "sensor.local_weather_temperature"

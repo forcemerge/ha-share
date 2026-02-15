@@ -6,6 +6,7 @@ Original Severe Weather dashboard snapshot package, preserved for comparison.
 
 - `dashboard.yaml` - sanitized v1 dashboard definition
 - `helpers.yaml` - helper template and binary sensors used by this dashboard
+- `scripts.yaml` - script referenced by dashboard action card
 - `images/dashboard.png` - add one screenshot here
 
 ## Requirements
@@ -18,6 +19,8 @@ Original Severe Weather dashboard snapshot package, preserved for comparison.
 ## Sanitization notes
 
 This package redacts environment-specific identifiers and replaces them with neutral names.
+
+The included `scripts.yaml` is also sanitized and expects your local AI task/weather entities.
 
 Update these entities to your local equivalents before use.
 

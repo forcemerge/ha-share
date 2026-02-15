@@ -1,0 +1,479 @@
+# Network (Share Edition)
+#
+# Public share package of the Network dashboard.
+# This version preserves layout/logic while sanitizing environment-specific identifiers.
+#
+# Features: health headline, core device status, WAN throughput gauges, traffic trends,
+# and quick control actions for network infrastructure.
+#
+# Requirements: network telemetry entities, button entities for restarts/power cycles,
+# and helper sensors from this package's helpers.yaml.
+title: Network
+views:
+  - title: Command Center
+    path: command-center
+    icon: mdi:wan
+    badges:
+      - entity: switch.network_core_service
+        name: Network Core
+      - entity: sensor.network_active_clients_home
+        name: Active Clients
+      - entity: sensor.network_total_throughput_mbps
+        name: Total Mb/s
+    cards:
+      - type: markdown
+        content: |
+          # Network Command Center
+          Live fabric health, WAN throughput, and diagnostics.
+
+      - type: markdown
+        content: >-
+          {% set offline = states('sensor.network_core_devices_offline') | int(0) %}
+          {% set updates = states('sensor.network_pending_updates') | int(0) %}
+          {% if offline > 0 %}
+          ## ALERT: {{ offline }} core network device{{ 's' if offline != 1 else '' }} offline
+          Immediate investigation recommended from Infrastructure and Control Room.
+          {% elif updates > 0 %}
+          ## NOTICE: {{ updates }} firmware/software update{{ 's' if updates != 1 else '' }} pending
+          Schedule a maintenance window if stability is required.
+          {% else %}
+          ## All core infrastructure looks healthy
+          No core outages detected and no pending network updates.
+          {% endif %}
+
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: tile
+            entity: sensor.network_health_score
+            name: Health Score
+            icon: mdi:heart-pulse
+            color: green
+
+          - type: tile
+            entity: sensor.network_core_devices_offline
+            name: Core Devices Offline
+            icon: mdi:alert-octagon-outline
+            color: red
+
+          - type: tile
+            entity: sensor.network_pending_updates
+            name: Pending Updates
+            icon: mdi:update
+            color: amber
+
+          - type: tile
+            entity: switch.network_core_service
+            name: Network Core Service
+            icon: mdi:router-network
+            color: blue
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.network_downlink_throughput_mbps
+            name: Downlink
+            min: 0
+            max: 1000
+            needle: true
+            severity:
+              green: 0
+              yellow: 300
+              red: 700
+
+          - type: gauge
+            entity: sensor.network_uplink_throughput_mbps
+            name: Uplink
+            min: 0
+            max: 300
+            needle: true
+            severity:
+              green: 0
+              yellow: 80
+              red: 180
+
+          - type: tile
+            entity: sensor.network_total_throughput_mbps
+            name: Total Throughput
+            icon: mdi:swap-horizontal-bold
+            color: teal
+
+          - type: tile
+            entity: sensor.network_active_clients_home
+            name: Active Clients
+            icon: mdi:account-network
+            color: blue
+
+      - type: history-graph
+        title: WAN Throughput (last 90 minutes)
+        hours_to_show: 2
+        refresh_interval: 20
+        entities:
+          - entity: sensor.network_downlink_throughput_mbps
+            name: Downlink Mb/s
+          - entity: sensor.network_uplink_throughput_mbps
+            name: Uplink Mb/s
+
+      - type: statistics-graph
+        title: WAN Throughput Trend (24h)
+        chart_type: line
+        period: hour
+        days_to_show: 1
+        stat_types:
+          - mean
+          - max
+        entities:
+          - sensor.network_downlink_throughput_mbps
+          - sensor.network_uplink_throughput_mbps
+
+      - type: entities
+        title: Fabric Health
+        show_header_toggle: false
+        entities:
+          - entity: sensor.gateway_state
+            name: Gateway State
+          - entity: sensor.core_switch_state
+            name: Core Switch State
+          - entity: sensor.ap_primary_state
+            name: AP Primary State
+          - entity: sensor.ap_upper_state
+            name: AP Upper State
+          - entity: sensor.ap_lower_state
+            name: AP Lower State
+          - entity: sensor.gateway_uptime
+            name: Gateway Uptime
+          - entity: sensor.core_switch_uptime
+            name: Core Switch Uptime
+
+      - type: entities
+        title: Throughput Source Diagnostics
+        show_header_toggle: false
+        entities:
+          - entity: sensor.network_downlink_throughput
+            name: Downlink Source Value (MB/s)
+          - type: attribute
+            entity: sensor.network_downlink_throughput
+            attribute: source_entity
+            name: Downlink Source Entity
+          - entity: sensor.network_uplink_throughput
+            name: Uplink Source Value (MB/s)
+          - type: attribute
+            entity: sensor.network_uplink_throughput
+            attribute: source_entity
+            name: Uplink Source Entity
+          - entity: sensor.gateway_rx_primary
+            name: Legacy Gateway RX
+          - entity: sensor.gateway_tx_primary
+            name: Legacy Gateway TX
+
+  - title: Infrastructure
+    path: infrastructure
+    icon: mdi:server-network
+    cards:
+      - type: markdown
+        content: |
+          # Infrastructure
+          Core gateway, switch, and AP telemetry with update and restart controls.
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.gateway_cpu_utilization
+            name: Gateway CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+
+          - type: gauge
+            entity: sensor.gateway_memory_utilization
+            name: Gateway Memory
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 65
+              red: 85
+
+          - type: gauge
+            entity: sensor.core_switch_cpu_utilization
+            name: Core Switch CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+
+          - type: gauge
+            entity: sensor.core_switch_memory_utilization
+            name: Core Switch Memory
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 65
+              red: 85
+
+          - type: gauge
+            entity: sensor.ap_primary_cpu_utilization
+            name: AP Primary CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+
+          - type: gauge
+            entity: sensor.ap_primary_memory_utilization
+            name: AP Primary Memory
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 65
+              red: 85
+
+          - type: gauge
+            entity: sensor.ap_upper_cpu_utilization
+            name: AP Upper CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+
+          - type: gauge
+            entity: sensor.ap_upper_memory_utilization
+            name: AP Upper Memory
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 65
+              red: 85
+
+          - type: gauge
+            entity: sensor.ap_lower_cpu_utilization
+            name: AP Lower CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+
+          - type: gauge
+            entity: sensor.ap_lower_memory_utilization
+            name: AP Lower Memory
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 65
+              red: 85
+
+      - type: entities
+        title: Firmware / Software Updates
+        show_header_toggle: false
+        entities:
+          - update.gateway_firmware
+          - update.core_switch_firmware
+          - update.ap_primary_firmware
+          - update.ap_upper_firmware
+          - update.ap_lower_firmware
+
+      - type: entities
+        title: Core Services
+        show_header_toggle: false
+        entities:
+          - switch.network_core_service
+          - switch.network_service_dns
+          - switch.network_service_print
+          - switch.network_service_download
+
+      - type: entities
+        title: Link Metadata
+        show_header_toggle: false
+        entities:
+          - sensor.core_switch_uplink_mac
+          - sensor.ap_primary_uplink_mac
+          - sensor.ap_upper_uplink_mac
+          - sensor.ap_lower_uplink_mac
+
+  - title: Traffic Studio
+    path: traffic-studio
+    icon: mdi:chart-line-variant
+    cards:
+      - type: markdown
+        content: |
+          # Traffic Studio
+          Device traffic trends for key endpoints in your environment.
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: statistics-graph
+            title: Home Automation Host (24h)
+            chart_type: line
+            period: hour
+            days_to_show: 1
+            stat_types:
+              - mean
+              - max
+            entities:
+              - sensor.hub_host_rx
+              - sensor.hub_host_tx
+
+          - type: statistics-graph
+            title: Mobile Device (24h)
+            chart_type: line
+            period: hour
+            days_to_show: 1
+            stat_types:
+              - mean
+              - max
+            entities:
+              - sensor.mobile_device_rx
+              - sensor.mobile_device_tx
+
+          - type: statistics-graph
+            title: Workstation (24h)
+            chart_type: line
+            period: hour
+            days_to_show: 1
+            stat_types:
+              - mean
+              - max
+            entities:
+              - sensor.workstation_rx
+              - sensor.workstation_tx
+
+          - type: statistics-graph
+            title: Media Speaker (24h)
+            chart_type: line
+            period: hour
+            days_to_show: 1
+            stat_types:
+              - mean
+              - max
+            entities:
+              - sensor.media_speaker_rx
+              - sensor.media_speaker_tx
+
+      - type: history-graph
+        title: Entertainment / IoT Snapshot (last 2h)
+        hours_to_show: 2
+        refresh_interval: 30
+        entities:
+          - entity: sensor.hub_bridge_rx
+            name: Bridge RX
+          - entity: sensor.streaming_box_rx
+            name: Streaming Box RX
+          - entity: sensor.living_room_tv_rx
+            name: TV RX
+          - entity: sensor.game_console_rx
+            name: Console RX
+
+      - type: entities
+        title: Quick Health Check
+        show_header_toggle: false
+        entities:
+          - sensor.network_total_throughput_mbps
+          - sensor.network_downlink_throughput_mbps
+          - sensor.network_uplink_throughput_mbps
+          - sensor.network_active_clients_home
+          - switch.network_core_service
+
+  - title: Control Room
+    path: control-room
+    icon: mdi:console-network
+    cards:
+      - type: markdown
+        content: |
+          # Control Room
+          Tap actions below trigger immediate restarts or PoE cycles. Use deliberately.
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: button
+            name: Restart Gateway
+            icon: mdi:restart-alert
+            tap_action:
+              action: call-service
+              service: button.press
+              target:
+                entity_id: button.gateway_restart
+              confirmation:
+                text: Restart gateway now?
+
+          - type: button
+            name: Restart Core Switch
+            icon: mdi:restart-alert
+            tap_action:
+              action: call-service
+              service: button.press
+              target:
+                entity_id: button.core_switch_restart
+              confirmation:
+                text: Restart core switch now?
+
+          - type: button
+            name: Restart AP Primary
+            icon: mdi:wifi-refresh
+            tap_action:
+              action: call-service
+              service: button.press
+              target:
+                entity_id: button.ap_primary_restart
+              confirmation:
+                text: Restart AP Primary now?
+
+          - type: button
+            name: Restart AP Upper
+            icon: mdi:wifi-refresh
+            tap_action:
+              action: call-service
+              service: button.press
+              target:
+                entity_id: button.ap_upper_restart
+              confirmation:
+                text: Restart AP Upper now?
+
+          - type: button
+            name: Restart AP Lower
+            icon: mdi:wifi-refresh
+            tap_action:
+              action: call-service
+              service: button.press
+              target:
+                entity_id: button.ap_lower_restart
+              confirmation:
+                text: Restart AP Lower now?
+
+      - type: entities
+        title: PoE Power Cycle Controls
+        show_header_toggle: false
+        entities:
+          - button.core_switch_hub_power_cycle
+          - button.core_switch_ap_lower_power_cycle
+          - button.core_switch_tablet_power_cycle
+          - button.core_switch_edge_node_1_power_cycle
+          - button.core_switch_edge_node_2_power_cycle
+          - button.core_switch_edge_node_3_power_cycle
+          - button.core_switch_edge_node_4_power_cycle
+          - button.core_switch_edge_node_5_power_cycle
+          - button.core_switch_workstation_power_cycle
+          - button.core_switch_streaming_box_power_cycle

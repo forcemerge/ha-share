@@ -15,6 +15,7 @@ Each subdirectory in this folder is a self-contained, shareable dashboard packag
 ## Optional files
 
 - `helpers.yaml` for dashboard-specific helpers that are required to make the dashboard work
+- `scripts.yaml` for dashboard-referenced scripts that should be included with the package
 
 ## Rules for all published dashboards
 
@@ -26,7 +27,13 @@ Each subdirectory in this folder is a self-contained, shareable dashboard packag
 
 ## Current packages
 
+- `control/`
+- `lighting/`
+- `network/`
+- `security/`
 - `severe_weather/`
 - `severe_weather_v1/`
+- `sports_tracker/`
+- `weather/`
 
 Use `_template/` as a starting point for new dashboard packages.

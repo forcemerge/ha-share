@@ -12,6 +12,7 @@ Current scope: **dashboards only**.
 
 - Sanitized dashboard packages under `dashboards/`
 - Optional helper definitions needed by those dashboards
+- Optional script definitions referenced by those dashboards
 - Dashboard-specific documentation
 - One screenshot PNG per dashboard (`images/dashboard.png`)
 
@@ -46,6 +47,7 @@ dashboards/
   <dashboard_slug>/
     dashboard.yaml
     helpers.yaml        # optional
+    scripts.yaml        # optional
     README.md
     images/
       dashboard.png     # expected single screenshot
