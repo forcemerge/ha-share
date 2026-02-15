@@ -20,13 +20,6 @@ Current Severe Weather Command Center dashboard package.
 
 This share package redacts environment-specific identifiers and uses neutral local sensor names.
 
-Examples:
-
-- `sensor.kennabrooke_lightning_*` -> `sensor.local_lightning_*`
-- `sensor.st_00201644_wind_gust` -> `sensor.local_weather_wind_gust`
-- `sensor.st_louis_pressure_sea_level` -> `sensor.local_weather_pressure_sea_level`
-- `sensor.st_louis_rain_last_hour` -> `sensor.local_weather_rain_last_hour`
-
 Update these entities to match your own installation.
 
 ## Screenshot
@@ -34,3 +27,5 @@ Update these entities to match your own installation.
 Place your screenshot at:
 
 - `images/dashboard.png`
+
+![Dashboard screenshot](images/dashboard.png)

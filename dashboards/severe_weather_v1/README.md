@@ -17,14 +17,7 @@ Original Severe Weather dashboard snapshot package, preserved for comparison.
 
 ## Sanitization notes
 
-This package redacts environment-specific identifiers and replaces them with neutral names:
-
-- `sensor.st_louis_lightning_count_last_1_hr` -> `sensor.local_lightning_count_last_1_hr`
-- `sensor.st_louis_lightning_count_last_3_hr` -> `sensor.local_lightning_count_last_3_hr`
-- `sensor.st_00201644_lightning_average_distance` -> `sensor.local_lightning_average_distance`
-- `sensor.st_00201644_wind_gust` -> `sensor.local_weather_wind_gust`
-- `sensor.st_louis_pressure_sea_level` -> `sensor.local_weather_pressure_sea_level`
-- `sensor.st_louis_rain_last_hour` -> `sensor.local_weather_rain_last_hour`
+This package redacts environment-specific identifiers and replaces them with neutral names.
 
 Update these entities to your local equivalents before use.
 
@@ -33,3 +26,5 @@ Update these entities to your local equivalents before use.
 Place your screenshot at:
 
 - `images/dashboard.png`
+
+![Dashboard screenshot](images/dashboard.png)
