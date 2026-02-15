@@ -1,0 +1,9 @@
+# Optional helpers for this dashboard package.
+#
+# Include only what is needed by dashboard.yaml.
+# Keep names generic and sanitized for public sharing.
+
+input_boolean:
+  dashboard_template_demo_toggle:
+    name: "Template Demo Toggle"
+    icon: mdi:toggle-switch

@@ -1,0 +1,382 @@
+# Severe Weather (v1, Share Edition)
+#
+# Public share package of the original Severe Weather v1 dashboard.
+# This keeps the older comparison layout while sanitizing environment-specific identifiers.
+#
+# Features: badges for risk/escalation/lightning/alerts, detailed header, conditional lightning
+# section, cockpit trends, NWS alert feed, and diagnostics.
+#
+# Requirements: NWS Alerts + nws-alert-card, Mushroom cards, ApexCharts card,
+# and sensors from this package's helpers.yaml.
+title: Severe Weather
+views:
+  - title: Tornado
+    path: tornado
+    icon: mdi:weather-tornado
+    badges:
+      - entity: sensor.storm_risk_cockpit_score
+        name: Storm Risk
+      - entity: sensor.storm_tornado_escalation_level
+        name: Escalation
+      - entity: sensor.storm_lightning_watch_index
+        name: Lightning Index
+      - entity: sensor.storm_active_alert_count
+        name: Alerts
+    cards:
+      - type: markdown
+        content: |
+          # Severe Weather Command Center
+          **Escalation Ladder · Lightning Watch · Storm Risk Cockpit**
+
+          NWS alerts + live weather telemetry for fast, focused storm decisions.
+
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: template
+            icon: mdi:shield-alert
+            content: >-
+              Risk {{ states('sensor.storm_risk_level') }}
+            icon_color: >-
+              {% set s = states('sensor.storm_risk_cockpit_score') | int(0) %}
+              {% if s >= 85 %} red
+              {% elif s >= 65 %} deep-orange
+              {% elif s >= 40 %} amber
+              {% elif s >= 20 %} yellow
+              {% else %} green
+              {% endif %}
+          - type: template
+            icon: mdi:stairs-up
+            content: >-
+              Escalation {{ states('sensor.storm_tornado_escalation_level') }}/4
+            icon_color: >-
+              {% set l = states('sensor.storm_tornado_escalation_level') | int(0) %}
+              {% if l >= 4 %} red
+              {% elif l >= 3 %} deep-orange
+              {% elif l >= 2 %} amber
+              {% elif l >= 1 %} yellow
+              {% else %} green
+              {% endif %}
+          - type: template
+            icon: mdi:weather-lightning
+            content: >-
+              Lightning {{ states('sensor.storm_lightning_watch_index') }}%
+            icon_color: >-
+              {% set l = states('sensor.storm_lightning_watch_index') | int(0) %}
+              {% if l >= 70 %} red
+              {% elif l >= 45 %} amber
+              {% else %} cyan
+              {% endif %}
+          - type: template
+            icon: mdi:alert-circle
+            content: >-
+              Alerts {{ states('sensor.storm_active_alert_count') }}
+            icon_color: >-
+              {% if states('sensor.storm_active_alert_count') | int(0) > 0 %} amber
+              {% else %} green
+              {% endif %}
+
+      - type: custom:mushroom-template-card
+        primary: >-
+          {{ states('sensor.storm_primary_alert_event') }}
+        secondary: >-
+          {{ states('sensor.storm_primary_alert_headline') }}
+        multiline_secondary: true
+        icon: >-
+          {% set lvl = states('sensor.storm_tornado_escalation_level') | int(0) %}
+          {% if lvl >= 4 %} mdi:alert-decagram
+          {% elif lvl >= 3 %} mdi:weather-tornado
+          {% elif lvl >= 2 %} mdi:shield-alert
+          {% elif lvl >= 1 %} mdi:weather-lightning-rainy
+          {% else %} mdi:shield-check
+          {% endif %}
+        icon_color: >-
+          {% set lvl = states('sensor.storm_tornado_escalation_level') | int(0) %}
+          {% if lvl >= 4 %} red
+          {% elif lvl >= 3 %} deep-orange
+          {% elif lvl >= 2 %} amber
+          {% elif lvl >= 1 %} yellow
+          {% else %} green
+          {% endif %}
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: button
+            name: Run AI Correlation Snapshot
+            icon: mdi:brain
+            tap_action:
+              action: call-service
+              service: script.severe_weather_ai_correlation_snapshot
+            hold_action:
+              action: none
+            show_state: false
+          - type: custom:mushroom-entity-card
+            entity: ai_task.openai_ai_task
+            name: AI Task Heartbeat
+            icon: mdi:robot-outline
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.storm_risk_cockpit_score
+            name: Cockpit Risk
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 0
+              yellow: 40
+              red: 65
+          - type: gauge
+            entity: sensor.storm_lightning_watch_index
+            name: Lightning Watch
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 0
+              yellow: 45
+              red: 70
+          - type: gauge
+            entity: sensor.storm_environmental_instability_index
+            name: Environment
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 0
+              yellow: 45
+              red: 65
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.storm_elevated_mode
+            state: 'on'
+        card:
+          type: custom:mushroom-template-card
+          primary: Elevated Weather Mode
+          secondary: >-
+            {{ states('sensor.storm_primary_alert_event') }} ·
+            Risk {{ states('sensor.storm_risk_level') }} ({{ states('sensor.storm_risk_cockpit_score') }}%)
+          icon: mdi:alert-octagon
+          icon_color: amber
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.storm_elevated_mode
+            state: 'off'
+        card:
+          type: custom:mushroom-template-card
+          primary: Calm Monitoring Mode
+          secondary: Baseline severe-weather monitoring is active.
+          icon: mdi:shield-check
+          icon_color: green
+
+      - type: markdown
+        content: |
+          ## Tornado Escalation Ladder
+          Highest active stage is highlighted.
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            primary: S0 · Clear
+            secondary: No active warning/watch.
+            icon: mdi:shield-check
+            icon_color: >-
+              {% set lvl = states('sensor.storm_tornado_escalation_level') | int(0) %}
+              {{ 'green' if lvl == 0 else 'disabled' }}
+            layout: vertical
+            fill_container: true
+          - type: custom:mushroom-template-card
+            primary: S1 · Advisory
+            secondary: Non-tornado warning/watch.
+            icon: mdi:weather-lightning-rainy
+            icon_color: >-
+              {% set lvl = states('sensor.storm_tornado_escalation_level') | int(0) %}
+              {{ 'yellow' if lvl == 1 else 'disabled' }}
+            layout: vertical
+            fill_container: true
+          - type: custom:mushroom-template-card
+            primary: S2 · Tornado Watch
+            secondary: Conditions favorable.
+            icon: mdi:shield-alert
+            icon_color: >-
+              {% set lvl = states('sensor.storm_tornado_escalation_level') | int(0) %}
+              {{ 'amber' if lvl == 2 else 'disabled' }}
+            layout: vertical
+            fill_container: true
+          - type: custom:mushroom-template-card
+            primary: S3/S4 · Warning/Observed
+            secondary: Warning active or observed.
+            icon: mdi:weather-tornado
+            icon_color: >-
+              {% set lvl = states('sensor.storm_tornado_escalation_level') | int(0) %}
+              {% if lvl >= 4 %} red
+              {% elif lvl >= 3 %} deep-orange
+              {% else %} disabled
+              {% endif %}
+            layout: vertical
+            fill_container: true
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.storm_lightning_active
+            state: 'on'
+        card:
+          type: custom:apexcharts-card
+          header:
+            show: true
+            title: Lightning Watch (6h)
+            show_states: true
+            colorize_states: true
+          graph_span: 6h
+          apex_config:
+            chart:
+              height: 260
+            stroke:
+              width:
+                - 0
+                - 3
+                - 3
+            dataLabels:
+              enabled: false
+            legend:
+              show: true
+          yaxis:
+            - id: strikes
+              min: 0
+              decimals: 0
+            - id: distance
+              opposite: true
+              min: 0
+              decimals: 1
+          series:
+            - entity: sensor.local_lightning_count_last_1_hr
+              name: Strikes (1h)
+              type: column
+              color: '#f97316'
+              yaxis_id: strikes
+            - entity: sensor.local_lightning_count_last_3_hr
+              name: Strikes (3h)
+              type: line
+              color: '#ef4444'
+              yaxis_id: strikes
+            - entity: sensor.local_lightning_average_distance
+              name: Avg Distance (mi)
+              type: line
+              color: '#60a5fa'
+              yaxis_id: distance
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.storm_lightning_active
+            state: 'off'
+        card:
+          type: custom:mushroom-template-card
+          primary: Lightning Watch (6h)
+          secondary: No lightning activity detected in current watch window.
+          icon: mdi:weather-lightning
+          icon_color: green
+
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: Cockpit Signals (6h)
+          show_states: true
+          colorize_states: true
+        graph_span: 6h
+        apex_config:
+          chart:
+            height: 280
+          stroke:
+            width:
+              - 3
+              - 3
+              - 2
+          dataLabels:
+            enabled: false
+          legend:
+            show: true
+        yaxis:
+          - id: wind
+            min: 0
+            decimals: 1
+          - id: pressure
+            opposite: true
+            decimals: 2
+          - id: rain
+            opposite: true
+            min: 0
+            decimals: 1
+        series:
+          - entity: sensor.local_weather_wind_gust
+            name: Wind Gust (mph)
+            type: line
+            color: '#fb7185'
+            yaxis_id: wind
+          - entity: sensor.local_weather_pressure_sea_level
+            name: Pressure (inHg)
+            type: line
+            color: '#38bdf8'
+            yaxis_id: pressure
+          - entity: sensor.local_weather_rain_last_hour
+            name: Rain Last Hour (mm)
+            type: area
+            color: '#22d3ee'
+            yaxis_id: rain
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.storm_elevated_mode
+            state: 'on'
+        card:
+          type: custom:nws-alert-card
+          title: NWS Alert Feed
+          email: !secret nws_alert_email
+          nws_zone: !secret nws_zone
+          show_expanded: true
+          show_severity_markers: true
+          update_interval: 60
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.storm_elevated_mode
+            state: 'off'
+        card:
+          type: custom:nws-alert-card
+          title: NWS Alert Feed
+          email: !secret nws_alert_email
+          nws_zone: !secret nws_zone
+          show_expanded: false
+          show_severity_markers: true
+          update_interval: 60
+
+      - type: entities
+        title: Diagnostic Signals
+        show_header_toggle: false
+        entities:
+          - entity: sensor.storm_primary_alert_event
+            name: Primary Event
+          - entity: sensor.storm_primary_alert_headline
+            name: Primary Headline
+          - entity: sensor.storm_risk_level
+            name: Risk Level
+          - entity: binary_sensor.storm_action_recommended
+            name: Action Recommended
+          - type: attribute
+            entity: binary_sensor.storm_action_recommended
+            attribute: reason
+            name: Reason
+          - entity: sensor.nws_alerts_last_updated
+            name: NWS GPS Updated
+          - entity: sensor.nws_alerts_zone_last_updated
+            name: NWS Zone Updated
+          - entity: input_text.nws_last_tornado_key
+            name: Last Dedupe Key

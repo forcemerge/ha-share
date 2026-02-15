@@ -1,0 +1,22 @@
+# Dashboard Template
+#
+# Public share version of a Home Assistant dashboard.
+# Keep this header block in published dashboards.
+#
+# Sanitization guidance:
+# - Do not publish private entity IDs, station/account identifiers, hostnames, or location details.
+# - Use neutral placeholders and/or !secret references where appropriate.
+
+title: "Template Dashboard"
+views:
+  - title: "Overview"
+    path: "overview"
+    icon: "mdi:view-dashboard"
+    cards:
+      - type: "entities"
+        title: "Example Signals"
+        entities:
+          - entity: "sensor.redacted_primary_metric"
+            name: "Primary metric"
+          - entity: !secret shared_template_secondary_entity
+            name: "Secondary metric (secret-backed)"

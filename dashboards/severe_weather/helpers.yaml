@@ -1,0 +1,308 @@
+# Severe weather helper sensors for dashboard visualizations (share edition)
+#
+# This is a sanitized copy of helper templates used by the Severe Weather dashboards.
+# Replace local_* source entities with the entities available in your environment.
+- sensor:
+    - name: Storm Active Alert Count
+      unique_id: storm_active_alert_count
+      icon: mdi:alert
+      state_class: measurement
+      unit_of_measurement: alerts
+      state: >-
+        {{
+          states('sensor.nws_alerts_alerts') | int(0)
+          + states('sensor.nws_alerts_zone_alerts') | int(0)
+        }}
+
+    - name: Storm Tornado Escalation Level
+      unique_id: storm_tornado_escalation_level
+      icon: mdi:weather-tornado
+      state_class: measurement
+      unit_of_measurement: level
+      state: >-
+        {% set alerts =
+          (state_attr('sensor.nws_alerts_alerts', 'alerts')
+           or state_attr('sensor.nws_alerts_alerts', 'Alerts')
+           or [])
+           +
+          (state_attr('sensor.nws_alerts_zone_alerts', 'alerts')
+           or state_attr('sensor.nws_alerts_zone_alerts', 'Alerts')
+           or [])
+        %}
+        {% set ns = namespace(level=0) %}
+        {% for a in alerts %}
+          {% set p = a.get('properties', a) if a is mapping else dict() %}
+          {% set event = (p.get('event') or p.get('Event') or '') %}
+          {% set headline = (p.get('headline') or p.get('Headline') or '') %}
+          {% set desc = (p.get('description') or p.get('Description') or '') %}
+          {% set params = (p.get('parameters') or p.get('Parameters') or dict()) %}
+          {% set td = (params.get('tornadoDetection') or params.get('TornadoDetection') or []) %}
+          {% set td_txt = td if td is string else (td | join(' ')) %}
+          {% set observed =
+            'OBSERVED' in (td_txt | upper)
+            or 'OBSERVED' in (headline | upper)
+            or 'TORNADO...OBSERVED' in (desc | upper)
+          %}
+          {% set emergency = 'EMERGENCY' in (headline | upper) %}
+          {% set lvl = 0 %}
+          {% if event == 'Tornado Warning' and (observed or emergency) %}
+            {% set lvl = 4 %}
+          {% elif event == 'Tornado Warning' %}
+            {% set lvl = 3 %}
+          {% elif event == 'Tornado Watch' %}
+            {% set lvl = 2 %}
+          {% elif 'Severe Thunderstorm Warning' in event %}
+            {% set lvl = 1 %}
+          {% elif 'Warning' in event or 'Watch' in event %}
+            {% set lvl = 1 %}
+          {% endif %}
+          {% if lvl > ns.level %}
+            {% set ns.level = lvl %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.level }}
+
+    - name: Storm Primary Alert Event
+      unique_id: storm_primary_alert_event
+      icon: mdi:alert-circle-outline
+      state: >-
+        {% set alerts =
+          (state_attr('sensor.nws_alerts_alerts', 'alerts')
+           or state_attr('sensor.nws_alerts_alerts', 'Alerts')
+           or [])
+           +
+          (state_attr('sensor.nws_alerts_zone_alerts', 'alerts')
+           or state_attr('sensor.nws_alerts_zone_alerts', 'Alerts')
+           or [])
+        %}
+        {% set ns = namespace(level=-1, event='Clear') %}
+        {% for a in alerts %}
+          {% set p = a.get('properties', a) if a is mapping else dict() %}
+          {% set event = (p.get('event') or p.get('Event') or 'Severe Weather Alert') %}
+          {% set headline = (p.get('headline') or p.get('Headline') or '') %}
+          {% set desc = (p.get('description') or p.get('Description') or '') %}
+          {% set params = (p.get('parameters') or p.get('Parameters') or dict()) %}
+          {% set td = (params.get('tornadoDetection') or params.get('TornadoDetection') or []) %}
+          {% set td_txt = td if td is string else (td | join(' ')) %}
+          {% set observed =
+            'OBSERVED' in (td_txt | upper)
+            or 'OBSERVED' in (headline | upper)
+            or 'TORNADO...OBSERVED' in (desc | upper)
+          %}
+          {% set emergency = 'EMERGENCY' in (headline | upper) %}
+          {% set lvl = 0 %}
+          {% if event == 'Tornado Warning' and (observed or emergency) %}
+            {% set lvl = 4 %}
+          {% elif event == 'Tornado Warning' %}
+            {% set lvl = 3 %}
+          {% elif event == 'Tornado Watch' %}
+            {% set lvl = 2 %}
+          {% elif 'Severe Thunderstorm Warning' in event %}
+            {% set lvl = 1 %}
+          {% elif 'Warning' in event or 'Watch' in event %}
+            {% set lvl = 1 %}
+          {% endif %}
+          {% if lvl > ns.level %}
+            {% set ns.level = lvl %}
+            {% set ns.event = event %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.event }}
+
+    - name: Storm Primary Alert Headline
+      unique_id: storm_primary_alert_headline
+      icon: mdi:text
+      state: >-
+        {% set alerts =
+          (state_attr('sensor.nws_alerts_alerts', 'alerts')
+           or state_attr('sensor.nws_alerts_alerts', 'Alerts')
+           or [])
+           +
+          (state_attr('sensor.nws_alerts_zone_alerts', 'alerts')
+           or state_attr('sensor.nws_alerts_zone_alerts', 'Alerts')
+           or [])
+        %}
+        {% set ns = namespace(level=-1, headline='No active severe weather alerts.') %}
+        {% for a in alerts %}
+          {% set p = a.get('properties', a) if a is mapping else dict() %}
+          {% set event = (p.get('event') or p.get('Event') or 'Severe Weather Alert') %}
+          {% set headline = (p.get('headline') or p.get('Headline') or event) %}
+          {% set desc = (p.get('description') or p.get('Description') or '') %}
+          {% set params = (p.get('parameters') or p.get('Parameters') or dict()) %}
+          {% set td = (params.get('tornadoDetection') or params.get('TornadoDetection') or []) %}
+          {% set td_txt = td if td is string else (td | join(' ')) %}
+          {% set observed =
+            'OBSERVED' in (td_txt | upper)
+            or 'OBSERVED' in (headline | upper)
+            or 'TORNADO...OBSERVED' in (desc | upper)
+          %}
+          {% set emergency = 'EMERGENCY' in (headline | upper) %}
+          {% set lvl = 0 %}
+          {% if event == 'Tornado Warning' and (observed or emergency) %}
+            {% set lvl = 4 %}
+          {% elif event == 'Tornado Warning' %}
+            {% set lvl = 3 %}
+          {% elif event == 'Tornado Watch' %}
+            {% set lvl = 2 %}
+          {% elif 'Severe Thunderstorm Warning' in event %}
+            {% set lvl = 1 %}
+          {% elif 'Warning' in event or 'Watch' in event %}
+            {% set lvl = 1 %}
+          {% endif %}
+          {% if lvl > ns.level %}
+            {% set ns.level = lvl %}
+            {% set ns.headline = headline %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.headline[0:250] }}
+
+    - name: Storm Lightning Watch Index
+      unique_id: storm_lightning_watch_index
+      icon: mdi:weather-lightning
+      state_class: measurement
+      unit_of_measurement: "%"
+      state: >-
+        {% set c1 = states('sensor.local_lightning_count_last_1_hr') | int(0) %}
+        {% set c3 = states('sensor.local_lightning_count_last_3_hr') | int(0) %}
+        {% set d1 = states('sensor.local_lightning_average_distance') %}
+        {% set d2 = states('sensor.local_lightning_last_distance') %}
+        {% if d1 not in ['unknown', 'unavailable', 'none', ''] %}
+          {% set dist = d1 | float(99) %}
+        {% elif d2 not in ['unknown', 'unavailable', 'none', ''] %}
+          {% set dist = d2 | float(99) %}
+        {% else %}
+          {% set dist = 99 %}
+        {% endif %}
+
+        {% set activity = (c1 * 22) + (c3 * 6) %}
+        {% set proximity = 0 %}
+        {% if (c1 + c3) > 0 %}
+          {% if dist <= 5 %}
+            {% set proximity = 45 %}
+          {% elif dist <= 10 %}
+            {% set proximity = 35 %}
+          {% elif dist <= 20 %}
+            {% set proximity = 25 %}
+          {% elif dist <= 35 %}
+            {% set proximity = 10 %}
+          {% endif %}
+        {% endif %}
+
+        {{ [100, (activity + proximity)] | min }}
+
+    - name: Storm Barometer Rounded
+      unique_id: storm_barometer_rounded
+      icon: mdi:gauge
+      state_class: measurement
+      unit_of_measurement: inHg
+      state: >-
+        {% set p = states('sensor.local_weather_pressure_sea_level') %}
+        {% if p in ['unknown', 'unavailable', 'none', ''] %}
+          unknown
+        {% else %}
+          {{ p | float(0) | round(2) }}
+        {% endif %}
+
+    - name: Storm Environmental Instability Index
+      unique_id: storm_environmental_instability_index
+      icon: mdi:weather-windy
+      state_class: measurement
+      unit_of_measurement: "%"
+      state: >-
+        {% set gust_raw = states('sensor.local_weather_wind_gust') %}
+        {% if gust_raw in ['unknown', 'unavailable', 'none', ''] %}
+          {% set gust_raw = states('sensor.local_weather_wind_gust_alt') %}
+        {% endif %}
+        {% set gust = gust_raw | float(0) %}
+
+        {% set rain_mm = states('sensor.local_weather_rain_last_hour') | float(0) %}
+        {% set pressure = states('sensor.local_weather_pressure_sea_level') | float(30) %}
+
+        {% set wind_term = [45, (gust * 2.2)] | min %}
+        {% set rain_term = [25, (rain_mm * 6)] | min %}
+
+        {% if pressure <= 29.2 %}
+          {% set pressure_term = 30 %}
+        {% elif pressure <= 29.5 %}
+          {% set pressure_term = 22 %}
+        {% elif pressure <= 29.8 %}
+          {% set pressure_term = 14 %}
+        {% else %}
+          {% set pressure_term = 6 %}
+        {% endif %}
+
+        {{ (wind_term + rain_term + pressure_term) | round(0) }}
+
+    - name: Storm Risk Cockpit Score
+      unique_id: storm_risk_cockpit_score
+      icon: mdi:radar
+      state_class: measurement
+      unit_of_measurement: "%"
+      state: >-
+        {% set escalation = states('sensor.storm_tornado_escalation_level') | int(0) * 20 %}
+        {% set lightning = states('sensor.storm_lightning_watch_index') | float(0) * 0.35 %}
+        {% set environment = states('sensor.storm_environmental_instability_index') | float(0) * 0.35 %}
+        {% set alert_bonus = [20, (states('sensor.storm_active_alert_count') | int(0) * 8)] | min %}
+        {% set total = escalation + lightning + environment + alert_bonus %}
+        {{ [100, total | round(0)] | min }}
+
+    - name: Storm Risk Level
+      unique_id: storm_risk_level
+      icon: mdi:shield-alert
+      state: >-
+        {% set score = states('sensor.storm_risk_cockpit_score') | int(0) %}
+        {% if score >= 85 %}
+          Extreme
+        {% elif score >= 65 %}
+          High
+        {% elif score >= 40 %}
+          Elevated
+        {% elif score >= 20 %}
+          Guarded
+        {% else %}
+          Low
+        {% endif %}
+
+- binary_sensor:
+    - name: Storm Action Recommended
+      unique_id: storm_action_recommended
+      device_class: problem
+      state: >-
+        {% set escalation = states('sensor.storm_tornado_escalation_level') | int(0) %}
+        {% set score = states('sensor.storm_risk_cockpit_score') | int(0) %}
+        {% set lightning = states('sensor.storm_lightning_watch_index') | int(0) %}
+        {{ escalation >= 2 or score >= 65 or lightning >= 70 }}
+      attributes:
+        reason: >-
+          {% set escalation = states('sensor.storm_tornado_escalation_level') | int(0) %}
+          {% set score = states('sensor.storm_risk_cockpit_score') | int(0) %}
+          {% set lightning = states('sensor.storm_lightning_watch_index') | int(0) %}
+          {% if escalation >= 4 %}
+            Tornado warning observed/emergency conditions detected.
+          {% elif escalation >= 3 %}
+            Tornado warning active.
+          {% elif escalation >= 2 %}
+            Tornado watch active.
+          {% elif lightning >= 70 %}
+            Lightning proximity/activity elevated.
+          {% elif score >= 65 %}
+            Composite storm risk score is high.
+          {% else %}
+            No critical actions required.
+          {% endif %}
+
+    - name: Storm Lightning Active
+      unique_id: storm_lightning_active
+      state: >-
+        {% set c1 = states('sensor.local_lightning_count_last_1_hr') | int(0) %}
+        {% set c3 = states('sensor.local_lightning_count_last_3_hr') | int(0) %}
+        {% set idx = states('sensor.storm_lightning_watch_index') | int(0) %}
+        {{ c1 > 0 or c3 > 0 or idx >= 30 }}
+
+    - name: Storm Elevated Mode
+      unique_id: storm_elevated_mode
+      state: >-
+        {% set escalation = states('sensor.storm_tornado_escalation_level') | int(0) %}
+        {% set score = states('sensor.storm_risk_cockpit_score') | int(0) %}
+        {% set alerts = states('sensor.storm_active_alert_count') | int(0) %}
+        {{ escalation >= 2 or score >= 40 or alerts > 0 }}
