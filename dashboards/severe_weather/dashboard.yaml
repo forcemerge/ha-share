@@ -4,10 +4,12 @@
 # This version preserves layout/logic while sanitizing environment-specific identifiers.
 #
 # Features: NWS alert feed (collapsed when calm), escalation ladder tiles, risk chips,
-# AI snapshot action, gauges, Blitzortung lightning localization, and cockpit trend signals.
+# AI snapshot action, gauges, line gauges for rain intensity + wind gust,
+# Blitzortung lightning localization, and cockpit trend signals.
 #
 # Requirements: NWS Alerts + nws-alert-card, Mushroom cards, ApexCharts card,
-# Blitzortung Lightning Card, and sensors from this package's helpers.yaml.
+# Blitzortung Lightning Card, Entity Progress Card,
+# and sensors from this package's helpers.yaml.
 title: Severe Weather
 views:
   - title: Severe Weather Command Center
@@ -186,6 +188,78 @@ views:
               red: 28.9
               yellow: 29.7
               green: 30.1
+
+      - type: custom:entity-progress-card-template
+        entity: sensor.local_weather_precipitation_intensity
+        name: Rain Intensity
+        icon: mdi:weather-pouring
+        unit: in/hr
+        decimal: 2
+        percent: >-
+          {% set rain = states(entity) | float(0) %}
+          {% set max_v = states('input_number.storm_rain_rate_full_scale') | float(2.0) %}
+          {% set max_v = [max_v, 0.01] | max %}
+          {% set rain = [rain, 0] | max %}
+          {% set rain = [rain, max_v] | min %}
+          {{ ((rain / max_v) * 100) | round(0) }}
+        bar_color: >-
+          {% set rain = states(entity) | float(0) %}
+          {% if rain >= 1.50 %} #c62828
+          {% elif rain >= 0.75 %} #ef6c00
+          {% elif rain >= 0.25 %} #f9a825
+          {% elif rain > 0.02 %} #43a047
+          {% else %} var(--disabled-text-color)
+          {% endif %}
+        bar_effect: >-
+          {% set rain = states(entity) | float(0) %}
+          {% if rain >= 0.75 %}
+            radius, gradient, shimmer
+          {% elif rain > 0.05 %}
+            radius, gradient
+          {% else %}
+            radius
+          {% endif %}
+        bar_position: overlay
+        bar_single_line: true
+        height: 34px
+        frameless: true
+        marginless: true
+
+      - type: custom:entity-progress-card-template
+        entity: sensor.local_weather_wind_gust
+        name: Wind Gust
+        icon: mdi:weather-windy
+        unit: mph
+        decimal: 0
+        percent: >-
+          {% set gust = states(entity) | float(0) %}
+          {% set max_v = states('input_number.storm_wind_gust_full_scale') | float(60) %}
+          {% set max_v = [max_v, 1] | max %}
+          {% set gust = [gust, 0] | max %}
+          {% set gust = [gust, max_v] | min %}
+          {{ ((gust / max_v) * 100) | round(0) }}
+        bar_color: >-
+          {% set gust = states(entity) | float(0) %}
+          {% if gust >= 50 %} #c62828
+          {% elif gust >= 35 %} #ef6c00
+          {% elif gust >= 20 %} #f9a825
+          {% elif gust >= 10 %} #43a047
+          {% else %} #2e7d32
+          {% endif %}
+        bar_effect: >-
+          {% set gust = states(entity) | float(0) %}
+          {% if gust >= 35 %}
+            radius, gradient, shimmer
+          {% elif gust >= 10 %}
+            radius, gradient
+          {% else %}
+            radius
+          {% endif %}
+        bar_position: overlay
+        bar_single_line: true
+        height: 34px
+        frameless: true
+        marginless: true
 
       - type: custom:blitzortung-lightning-card
         title: Lightning Localization

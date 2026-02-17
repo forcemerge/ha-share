@@ -36,4 +36,9 @@ Each subdirectory in this folder is a self-contained, shareable dashboard packag
 - `sports_tracker/`
 - `weather/`
 
+## Package-specific notes
+
+- `severe_weather/` (current) includes two full-width line gauges under the semicircle gauge grid
+  (Rain Intensity + Wind Gust) using `custom:entity-progress-card-template`.
+
 Use `_template/` as a starting point for new dashboard packages.

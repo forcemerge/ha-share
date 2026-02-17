@@ -15,7 +15,32 @@ Current Severe Weather Command Center dashboard package.
 - Mushroom cards
 - ApexCharts card
 - Blitzortung Lightning Card
+- Entity Progress Card (`custom:entity-progress-card-template`)
 - Script entity: `script.severe_weather_ai_correlation_snapshot` (or equivalent)
+
+### Line gauges under the gauge grid
+
+The current dashboard includes two full-width horizontal line gauges below the standard semicircle gauge grid:
+
+- Rain Intensity (`in/hr`)
+- Wind Gust (`mph`)
+
+Implementation notes:
+
+- Percent is templated and clamped to 0-100.
+- Bar color is threshold-based (green -> yellow -> orange -> red).
+- Shimmer effect is conditional and only enabled at elevated values.
+- Cards use `frameless: true`, `marginless: true`, and a consistent `height` for compact stacking.
+
+Default full-scale values used by the templates:
+
+- Rain intensity: `2.0 in/hr`
+- Wind gust: `60 mph`
+
+Optional helper entities for runtime tuning (without editing dashboard YAML):
+
+- `input_number.storm_rain_rate_full_scale`
+- `input_number.storm_wind_gust_full_scale`
 
 ### AI snapshot helper entities required
 
