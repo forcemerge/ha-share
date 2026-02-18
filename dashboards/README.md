@@ -40,5 +40,7 @@ Each subdirectory in this folder is a self-contained, shareable dashboard packag
 
 - `severe_weather/` (current) includes two full-width line gauges under the semicircle gauge grid
   (Rain Intensity + Wind Gust) using `custom:entity-progress-card-template`.
+- `severe_weather/` also includes side-by-side live exterior camera cards (front door left, backyard right)
+  using `picture-entity` cards.
 
 Use `_template/` as a starting point for new dashboard packages.

@@ -16,6 +16,7 @@ Current Severe Weather Command Center dashboard package.
 - ApexCharts card
 - Blitzortung Lightning Card
 - Entity Progress Card (`custom:entity-progress-card-template`)
+- Camera entities for live exterior views (`camera.local_front_door`, `camera.local_backyard`)
 - Script entity: `script.severe_weather_ai_correlation_snapshot` (or equivalent)
 
 ### Line gauges under the gauge grid
@@ -41,6 +42,21 @@ Optional helper entities for runtime tuning (without editing dashboard YAML):
 
 - `input_number.storm_rain_rate_full_scale`
 - `input_number.storm_wind_gust_full_scale`
+
+### Side-by-side live exterior cameras
+
+The current dashboard includes two always-live `picture-entity` cards in a 2-column grid, directly below
+Lightning Localization:
+
+- Left: `camera.local_front_door`
+- Right: `camera.local_backyard`
+
+Implementation notes:
+
+- `camera_view: live`
+- Text-free display (`show_name: false`, `show_state: false`)
+- `aspect_ratio: '16:9'`
+- `tap_action: more-info`
 
 ### AI snapshot helper entities required
 

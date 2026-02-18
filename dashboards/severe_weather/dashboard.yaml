@@ -5,10 +5,11 @@
 #
 # Features: NWS alert feed (collapsed when calm), escalation ladder tiles, risk chips,
 # AI snapshot action, gauges, line gauges for rain intensity + wind gust,
-# Blitzortung lightning localization, and cockpit trend signals.
+# Blitzortung lightning localization, side-by-side live exterior camera views,
+# and cockpit trend signals.
 #
 # Requirements: NWS Alerts + nws-alert-card, Mushroom cards, ApexCharts card,
-# Blitzortung Lightning Card, Entity Progress Card,
+# Blitzortung Lightning Card, Entity Progress Card, active camera entities,
 # and sensors from this package's helpers.yaml.
 title: Severe Weather
 views:
@@ -276,6 +277,27 @@ views:
         card_section_order:
           - compass_radar
           - map
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: picture-entity
+            entity: camera.local_front_door
+            camera_view: live
+            show_name: false
+            show_state: false
+            aspect_ratio: '16:9'
+            tap_action:
+              action: more-info
+          - type: picture-entity
+            entity: camera.local_backyard
+            camera_view: live
+            show_name: false
+            show_state: false
+            aspect_ratio: '16:9'
+            tap_action:
+              action: more-info
 
       - type: custom:apexcharts-card
         header:
