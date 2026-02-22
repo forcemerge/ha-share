@@ -1,0 +1,26 @@
+# Notion Travel
+#
+# Phase 3 UX focus:
+# 1) Single-pane mission console
+# 2) Two-column layout: mission/details/notes + itinerary
+# 3) Notes separated from timeline events
+#
+# Requirements:
+# - notion_travel custom integration
+# - custom card resource: /local/notion-travel-trip-card.js
+
+title: "Notion Travel"
+views:
+  - title: "Trip Console"
+    path: "trip-console"
+    icon: "mdi:airplane-takeoff"
+    panel: true
+    cards:
+      - type: "custom:notion-travel-trip-card"
+        mode: "overview"
+        entity: "sensor.notion_travel_next_trip"
+        title: "Mission Console"
+        use_upcoming: false
+        show_past: true
+        max_events: 300
+        max_notes: 8

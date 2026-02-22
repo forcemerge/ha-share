@@ -1,0 +1,10 @@
+{
+  "domain": "notion_travel",
+  "name": "Notion Travel",
+  "version": "0.1.0",
+  "documentation": "https://github.com/mattgmoser/home-assistant/tree/main/ha/custom_components/notion_travel",
+  "issue_tracker": "https://github.com/mattgmoser/home-assistant/issues",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "codeowners": ["@mattgmoser"]
+}

@@ -1,0 +1,307 @@
+# Optional scripts for the Weather + Lawn Guru package.
+#
+# These are sanitized reference scripts and use placeholder entities + secret names.
+# Update entity IDs, weather source, and Notion DB/property names for your environment.
+
+notion_upsert_database_row_by_day:
+  alias: Notion - Upsert Database Row By Day
+  mode: queued
+  fields:
+    database_id:
+      name: Notion database ID
+      required: true
+      selector:
+        text:
+    day_key:
+      name: Day key (YYYY-MM-DD)
+      required: true
+      selector:
+        text:
+    properties_payload:
+      name: Notion properties JSON payload
+      required: true
+      selector:
+        text:
+    date_property_name:
+      name: Date property name for upsert filter
+      required: false
+      default: Day
+      selector:
+        text:
+  sequence:
+    - variables:
+        token_for_request: !secret notion_travel_token
+    - variables:
+        query_payload: >-
+          {{
+            {
+              "filter": {
+                "property": date_property_name | default('Day'),
+                "date": {"equals": day_key}
+              }
+            } | to_json
+          }}
+    - action: rest_command.notion_database_query
+      response_variable: notion_query
+      data:
+        notion_token: "{{ token_for_request }}"
+        database_id: "{{ database_id }}"
+        payload: "{{ query_payload }}"
+    - choose:
+        - conditions: "{{ notion_query.status | int(0) != 200 }}"
+          sequence:
+            - stop: Notion upsert query failed
+    - variables:
+        existing_page_id: >-
+          {% set body = notion_query.content if notion_query.content is mapping else (notion_query.content | from_json) %}
+          {% set rows = body.get('results', []) if body is mapping else [] %}
+          {{ rows[0].id if (rows | count) > 0 else '' }}
+        create_payload: >-
+          {% set props = properties_payload if properties_payload is mapping else (properties_payload | from_json) %}
+          {{ {"parent": {"database_id": database_id}, "properties": props} | to_json }}
+        update_payload: >-
+          {% set props = properties_payload if properties_payload is mapping else (properties_payload | from_json) %}
+          {{ {"properties": props} | to_json }}
+    - choose:
+        - conditions: "{{ existing_page_id | length > 0 }}"
+          sequence:
+            - action: rest_command.notion_page_update
+              response_variable: notion_upsert
+              data:
+                notion_token: "{{ token_for_request }}"
+                page_id: "{{ existing_page_id }}"
+                payload: "{{ update_payload }}"
+      default:
+        - action: rest_command.notion_page_create
+          response_variable: notion_upsert
+          data:
+            notion_token: "{{ token_for_request }}"
+            payload: "{{ create_payload }}"
+
+grass_guru_notion_daily_weather_upsert:
+  alias: Grass Guru - Notion Daily Weather Upsert
+  mode: single
+  sequence:
+    - variables:
+        database_id: !secret notion_grass_guru_weather_db
+        day_key: "{{ now().strftime('%Y-%m-%d') }}"
+        rain_in: "{{ states('sensor.local_weather_rain_today') | float(0) | round(2) }}"
+        temp_high_f: "{{ states('sensor.local_weather_temp_high') | float(0) | round(0) }}"
+        temp_low_f: "{{ states('sensor.local_weather_temp_low') | float(0) | round(0) }}"
+        avg_humidity_pct: "{{ states('sensor.local_weather_humidity_avg') | float(0) | round(0) }}"
+        avg_dew_point_f: "{{ states('sensor.local_weather_dew_point_avg') | float(0) | round(0) }}"
+        avg_wind_mph: "{{ states('sensor.local_weather_wind_speed_avg') | float(0) | round(0) }}"
+        max_gust_mph: "{{ states('sensor.local_weather_wind_gust_max') | float(0) | round(0) }}"
+        uv_max: "{{ states('sensor.local_weather_uv_max') | float(0) | round(1) }}"
+        solar_rad_avg_wm2: "{{ states('sensor.local_weather_solar_radiation_avg') | float(0) | round(0) }}"
+        precip_type: "None"
+    - variables:
+        notion_properties_payload: >-
+          {{
+            {
+              "Name": {"title": [{"text": {"content": day_key}}]},
+              "Date": {"date": {"start": day_key}},
+              "Rain (in)": {"number": rain_in | float(0)},
+              "Temp High (°F)": {"number": temp_high_f | float(0)},
+              "Temp Low (°F)": {"number": temp_low_f | float(0)},
+              "Avg Humidity (%)": {"number": avg_humidity_pct | float(0)},
+              "Avg Dew Point (°F)": {"number": avg_dew_point_f | float(0)},
+              "Avg Wind (mph)": {"number": avg_wind_mph | float(0)},
+              "Max Gust (mph)": {"number": max_gust_mph | float(0)},
+              "Precip Type": {"select": {"name": precip_type}},
+              "UV Max": {"number": uv_max | float(0)},
+              "Solar Rad Avg (W/m²)": {"number": solar_rad_avg_wm2 | float(0)}
+            } | to_json
+          }}
+    - action: script.notion_upsert_database_row_by_day
+      data:
+        database_id: "{{ database_id }}"
+        day_key: "{{ day_key }}"
+        date_property_name: Date
+        properties_payload: "{{ notion_properties_payload }}"
+
+grass_guru_notion_weather_forecast_upsert:
+  alias: Grass Guru - Notion Weather Forecast Upsert
+  mode: single
+  sequence:
+    - action: weather.get_forecasts
+      target:
+        entity_id: weather.home
+      data:
+        type: daily
+      response_variable: daily_forecast
+    - variables:
+        database_id: !secret notion_grass_guru_weather_forecast_db
+        as_of_iso: "{{ now().isoformat() }}"
+        forecast_rows_json: >-
+          {% set root = daily_forecast.get('weather.home', {}) if daily_forecast is mapping else {} %}
+          {% set rows = root.get('forecast', []) if root is mapping else [] %}
+          {{ (rows[:7] if rows is sequence else []) | to_json }}
+    - repeat:
+        for_each: "{{ forecast_rows_json | from_json }}"
+        sequence:
+          - variables:
+              row: "{{ repeat.item if repeat.item is mapping else dict() }}"
+              day_key: "{{ (row.get('datetime', row.get('date', now().strftime('%Y-%m-%d'))) | string)[0:10] }}"
+              notion_properties_payload: >-
+                {{
+                  {
+                    "Name": {"title": [{"text": {"content": day_key}}]},
+                    "Forecast Date": {"date": {"start": day_key}},
+                    "As Of": {"date": {"start": as_of_iso}},
+                    "Source": {"select": {"name": "weather.home"}},
+                    "Condition": {"select": {"name": (row.get('condition', 'unknown') | string | lower)}},
+                    "Temp High (°F)": {"number": row.get('temperature') if row.get('temperature') is number else none},
+                    "Temp Low (°F)": {"number": row.get('templow') if row.get('templow') is number else none},
+                    "Precip Probability (%)": {"number": row.get('precipitation_probability') if row.get('precipitation_probability') is number else none},
+                    "Precip Amount (in)": {"number": row.get('precipitation') | float(0)},
+                    "Precip Type": {"select": {"name": "None"}},
+                    "Wind Avg (mph)": {"number": row.get('wind_speed') if row.get('wind_speed') is number else none},
+                    "Wind Bearing (°)": {"number": row.get('wind_bearing') if row.get('wind_bearing') is number else none},
+                    "Humidity (%)": {"number": row.get('humidity') if row.get('humidity') is number else none},
+                    "UV Index": {"number": row.get('uv_index') if row.get('uv_index') is number else none}
+                  } | to_json
+                }}
+          - action: script.notion_upsert_database_row_by_day
+            data:
+              database_id: "{{ database_id }}"
+              day_key: "{{ day_key }}"
+              date_property_name: "Forecast Date"
+              properties_payload: "{{ notion_properties_payload }}"
+
+grass_guru_ai_lawn_brief:
+  alias: Grass Guru - AI Lawn Brief
+  mode: single
+  sequence:
+    - action: conversation.process
+      response_variable: lawn_ai
+      data:
+        agent_id: conversation.openai_conversation
+        text: >-
+          You are a precise lawn-care agronomy assistant for a homeowner.
+          Respond exactly in this format:
+          SUMMARY: <text>
+          MOWING: <text>
+          WATERING: <text>
+          TREATMENTS: <text>
+          WATCHOUTS: <text>
+          CONFIDENCE: <text>
+    - variables:
+        ai_response_text: >-
+          {{
+            lawn_ai.response.speech.plain.speech
+            if lawn_ai is defined and lawn_ai.response is defined
+            and lawn_ai.response.speech is defined
+            and lawn_ai.response.speech.plain is defined
+            else ''
+          }}
+        ai_summary: >-
+          {% set m = ai_response_text | regex_findall('(?m)^SUMMARY:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'No AI lawn brief generated.' }}
+        ai_mowing_plan: >-
+          {% set m = ai_response_text | regex_findall('(?m)^MOWING:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'n/a' }}
+        ai_watering_plan: >-
+          {% set m = ai_response_text | regex_findall('(?m)^WATERING:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'n/a' }}
+        ai_treatment_plan: >-
+          {% set m = ai_response_text | regex_findall('(?m)^TREATMENTS:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'n/a' }}
+        ai_watchouts: >-
+          {% set m = ai_response_text | regex_findall('(?m)^WATCHOUTS:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'n/a' }}
+        ai_confidence: >-
+          {% set m = ai_response_text | regex_findall('(?m)^CONFIDENCE:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'n/a' }}
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_brief_summary
+      data:
+        value: "{{ ai_summary[0:255] }}"
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_brief_mowing
+      data:
+        value: "{{ ai_mowing_plan[0:255] }}"
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_brief_watering
+      data:
+        value: "{{ ai_watering_plan[0:255] }}"
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_brief_treatments
+      data:
+        value: "{{ ai_treatment_plan[0:255] }}"
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_brief_watchouts
+      data:
+        value: "{{ ai_watchouts[0:255] }}"
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_brief_confidence
+      data:
+        value: "{{ ai_confidence[0:255] }}"
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.grass_guru_ai_brief_last_updated
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+grass_guru_ai_lawn_ask:
+  alias: Grass Guru - AI Lawn Ask
+  mode: single
+  fields:
+    question:
+      name: Lawn question
+      required: false
+      selector:
+        text:
+  sequence:
+    - variables:
+        question_text: >-
+          {{
+            question
+            if (question is defined and (question | string | trim | length) > 0)
+            else states('input_text.grass_guru_ai_question')
+          }}
+    - choose:
+        - conditions: "{{ question_text | string | trim | length == 0 }}"
+          sequence:
+            - stop: Lawn question is empty
+    - action: conversation.process
+      response_variable: lawn_qa
+      data:
+        agent_id: conversation.openai_conversation
+        text: >-
+          You are a lawn-care assistant.
+          Question: {{ question_text }}
+          Respond exactly in this format:
+          ANSWER: <text>
+          CONFIDENCE: <text>
+    - variables:
+        answer_raw: >-
+          {{
+            lawn_qa.response.speech.plain.speech
+            if lawn_qa is defined and lawn_qa.response is defined
+            and lawn_qa.response.speech is defined
+            and lawn_qa.response.speech.plain is defined
+            else ''
+          }}
+        answer_text: >-
+          {% set m = answer_raw | regex_findall('(?m)^ANSWER:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'No answer generated.' }}
+        answer_confidence: >-
+          {% set m = answer_raw | regex_findall('(?m)^CONFIDENCE:\s*(.*)$') %}
+          {{ m[0] if m | count > 0 else 'n/a' }}
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_question
+      data:
+        value: "{{ question_text[0:255] }}"
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.grass_guru_ai_answer
+      data:
+        value: "{{ (answer_text ~ ' | Confidence: ' ~ answer_confidence)[0:255] }}"

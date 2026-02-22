@@ -147,3 +147,45 @@ views:
       -
         type: "markdown"
         content: "## Additional Stats\n\n{% set bad = ['unknown','unavailable','none','None',''] %}\n\n{# Station pressure #}\n{% set station_pressure = states('sensor.local_weather_station_pressure') %}\n{% if station_pressure in bad %}\n  {% set station_pressure = states('sensor.local_weather_air_pressure') %}\n{% endif %}\n{% if station_pressure in bad %}\n  {% set station_pressure = states('sensor.local_weather_pressure') %}\n{% endif %}\n\n{# Wet Bulb Globe Temperature #}\n{% set wbgt = states('sensor.local_weather_wet_bulb_globe_temperature') %}\n{% if wbgt in bad %}\n  {% set wbgt = states('sensor.local_weather_wet_bulb_globe_temperature_alt') %}\n{% endif %}\n\n{# Brightness / Illuminance #}\n{% set brightness = states('sensor.local_weather_brightness') %}\n{% if brightness in bad %}\n  {% set brightness = states('sensor.local_weather_illuminance') %}\n{% endif %}\n{% if brightness in bad %}\n  {% set brightness = states('sensor.local_weather_lux') %}\n{% endif %}\n\n{# Solar Radiation #}\n{% set solar = states('sensor.local_weather_solar_radiation') %}\n{% if solar in bad %}\n  {% set solar = states('sensor.local_weather_irradiance') %}\n{% endif %}\n\n- Station pressure: **{{ station_pressure if station_pressure not in bad else 'not exposed in HA (entity name differs or disabled)' }}**\n- Wet bulb globe temp: **{{ wbgt if wbgt not in bad else 'not exposed in HA (entity name differs or disabled)' }}**\n- Brightness: **{{ brightness if brightness not in bad else 'not exposed in HA (usually illuminance/lux)' }}**\n- Solar radiation: **{{ solar if solar not in bad else 'not exposed in HA (entity name differs or disabled)' }}**\n"
+  -
+    title: "Lawn Guru"
+    path: "lawn-guru"
+    icon: "mdi:grass"
+    cards:
+      -
+        type: "markdown"
+        content: "## Grass Guru AI Lawn Coach\n\n- Last updated: **{{ states('input_datetime.grass_guru_ai_brief_last_updated') if states('input_datetime.grass_guru_ai_brief_last_updated') not in ['unknown','unavailable','none','None',''] else 'not yet run' }}**\n- Summary: **{{ states('input_text.grass_guru_ai_brief_summary') }}**\n- Mowing: **{{ states('input_text.grass_guru_ai_brief_mowing') }}**\n- Watering: **{{ states('input_text.grass_guru_ai_brief_watering') }}**\n- Treatments: **{{ states('input_text.grass_guru_ai_brief_treatments') }}**\n- Watchouts: **{{ states('input_text.grass_guru_ai_brief_watchouts') }}**\n- Confidence: **{{ states('input_text.grass_guru_ai_brief_confidence') }}**\n- Q&A answer: **{{ states('input_text.grass_guru_ai_answer') }}**\n"
+      -
+        type: "entities"
+        title: "Lawn Coach Controls"
+        show_header_toggle: false
+        entities:
+          - entity: "input_boolean.grass_guru_ai_auto_enabled"
+            name: "Auto refresh"
+          - entity: "input_number.grass_guru_ai_brief_interval_hours"
+            name: "Refresh interval (hours)"
+          - entity: "input_boolean.grass_guru_ai_writeback_enabled"
+            name: "Write recommendation rows to Notion"
+          - entity: "input_text.grass_guru_notion_lawn_log_db_id"
+            name: "Notion Lawn Log DB ID (optional)"
+          - entity: "input_text.grass_guru_notion_recommendations_db_id"
+            name: "Notion Recommendations DB ID (optional)"
+          - entity: "input_text.grass_guru_ai_question"
+            name: "Question for Lawn Ask"
+      -
+        type: "grid"
+        columns: 2
+        square: false
+        cards:
+          - type: "button"
+            name: "Generate Lawn Brief"
+            icon: "mdi:robot-outline"
+            tap_action:
+              action: "call-service"
+              service: "script.grass_guru_ai_lawn_brief"
+          - type: "button"
+            name: "Ask Lawn Coach"
+            icon: "mdi:chat-question-outline"
+            tap_action:
+              action: "call-service"
+              service: "script.grass_guru_ai_lawn_ask"

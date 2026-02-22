@@ -6,15 +6,15 @@ Public, share-focused Home Assistant repository for selected artifacts.
 
 This repo publishes reusable pieces of my Home Assistant work without exposing private implementation details.
 
-Current scope: **dashboards only**.
+Current scope: **dashboards + custom components + frontend card resources**.
 
 ## What is included
 
 - Sanitized dashboard packages under `dashboards/`
-- Optional helper definitions needed by those dashboards
-- Optional script definitions referenced by those dashboards
-- Dashboard-specific documentation
-- One screenshot PNG per dashboard (`images/dashboard.png`)
+- Optional helper/script definitions needed by those dashboards
+- Shareable custom integrations under `custom_components/`
+- Shareable Lovelace/web assets under `www/`
+- Package-specific documentation and screenshots
 
 ## What is not included
 
@@ -59,6 +59,11 @@ dashboards/
 2. Update README files whenever functionality or structure changes.
 3. Never publish sensitive values that can be moved to secrets.
 4. Sanitize/redact sensitive identifiers (including IDs embedded in entity names).
+
+## Additional package areas
+
+- `custom_components/` for custom HA integrations with README per integration.
+- `www/` for custom Lovelace resources (cards/modules) with usage instructions.
 
 ## Future scope
 

@@ -30,6 +30,7 @@ Each subdirectory in this folder is a self-contained, shareable dashboard packag
 - `control/`
 - `lighting/`
 - `network/`
+- `notion_travel/`
 - `security/`
 - `severe_weather/`
 - `severe_weather_v1/`

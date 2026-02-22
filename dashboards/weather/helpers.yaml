@@ -1,0 +1,72 @@
+# Optional helpers for the Weather + Lawn Guru package.
+#
+# Merge these into configuration.yaml when enabling Grass Guru scripts/dashboard controls.
+
+input_text:
+  grass_guru_ai_brief_summary:
+    name: Grass Guru AI Brief Summary
+    max: 255
+    initial: Lawn brief has not been generated yet.
+  grass_guru_ai_brief_mowing:
+    name: Grass Guru AI Mowing Plan
+    max: 255
+    initial: n/a
+  grass_guru_ai_brief_watering:
+    name: Grass Guru AI Watering Plan
+    max: 255
+    initial: n/a
+  grass_guru_ai_brief_treatments:
+    name: Grass Guru AI Treatment Plan
+    max: 255
+    initial: n/a
+  grass_guru_ai_brief_watchouts:
+    name: Grass Guru AI Watchouts
+    max: 255
+    initial: n/a
+  grass_guru_ai_brief_confidence:
+    name: Grass Guru AI Confidence
+    max: 255
+    initial: n/a
+  grass_guru_ai_question:
+    name: Grass Guru AI Question
+    max: 255
+    initial: ""
+  grass_guru_ai_answer:
+    name: Grass Guru AI Answer
+    max: 255
+    initial: Ask a lawn question after generating a brief.
+  grass_guru_notion_lawn_log_db_id:
+    name: Grass Guru Notion Lawn Log DB ID
+    max: 64
+    initial: ""
+  grass_guru_notion_recommendations_db_id:
+    name: Grass Guru Notion Recommendations DB ID
+    max: 64
+    initial: ""
+
+input_number:
+  grass_guru_ai_brief_interval_hours:
+    name: Grass Guru AI Brief Interval Hours
+    min: 6
+    max: 72
+    step: 1
+    mode: box
+    unit_of_measurement: h
+    icon: mdi:timer-sand
+    initial: 24
+
+input_datetime:
+  grass_guru_ai_brief_last_updated:
+    name: Grass Guru AI Brief Last Updated
+    has_date: true
+    has_time: true
+
+input_boolean:
+  grass_guru_ai_auto_enabled:
+    name: Grass Guru AI Auto Refresh
+    initial: true
+    icon: mdi:robot-outline
+  grass_guru_ai_writeback_enabled:
+    name: Grass Guru AI Notion Writeback Enabled
+    initial: false
+    icon: mdi:database-arrow-up
